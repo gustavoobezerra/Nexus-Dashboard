@@ -7,6 +7,13 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        /**
+         * Inicializa a configuração do Tailwind CSS.
+         * Verifica se o objeto tailwind está disponível e configura o modo escuro e cores personalizadas.
+         * Se o tailwind não estiver carregado, tenta novamente após 50ms.
+         *
+         * @returns {void} Não retorna valor.
+         */
         const initTailwind = () => {
             if (typeof tailwind !== 'undefined') {
                 tailwind.config = {
@@ -33,10 +40,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Marked -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
         body { font-family: 'Inter', sans-serif; }
         .trans-all { transition: all 0.3s ease-in-out; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -56,7 +63,7 @@
 <body class="bg-gray-50 text-gray-800 dark:bg-slate-950 dark:text-gray-100 trans-all overflow-hidden">
 
     <div class="flex h-screen">
-        
+
         <!-- SIDEBAR -->
         <aside class="w-20 md:w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col flex-shrink-0 z-20 trans-all shadow-lg">
             <div class="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-gray-100 dark:border-slate-800">
@@ -71,7 +78,7 @@
                     <i class="fa-solid fa-chart-line text-lg group-hover:scale-110 trans-all"></i>
                     <span class="hidden md:block font-medium">Visão Geral</span>
                 </button>
-                
+
                 <button onclick="switchView('forecast')" id="nav-forecast" class="nav-item w-full flex items-center gap-4 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 rounded-xl trans-all group">
                     <i class="fa-solid fa-crystal-ball text-lg group-hover:scale-110 trans-all"></i>
                     <span class="hidden md:block font-medium">Previsões Futuras</span>
@@ -96,12 +103,12 @@
 
         <!-- MAIN CONTENT -->
         <main class="flex-1 flex flex-col min-w-0 relative">
-            
+
             <!-- TOP BAR -->
             <header class="h-auto md:h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between px-6 py-2 md:py-0 trans-all z-10 gap-2">
                 <div class="flex items-center gap-4">
                     <h2 id="page-title" class="text-lg font-bold text-gray-700 dark:text-gray-100 hidden md:block">Visão Geral</h2>
-                    
+
                     <!-- FILTROS DE DATA -->
                     <div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1">
                         <button onclick="filterByDate(7)" id="btn-7d" class="filter-btn px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-700 shadow-sm">7 Dias</button>
@@ -109,12 +116,12 @@
                         <button onclick="filterByDate('all')" id="btn-all" class="filter-btn px-3 py-1 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm">Todos</button>
                     </div>
                 </div>
-                
+
                 <div class="flex items-center gap-3">
                     <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:ring-2 ring-indigo-500 trans-all">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
-                    
+
                     <button onclick="exportData()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 trans-all" title="Baixar CSV">
                         <i class="fa-solid fa-download"></i>
                     </button>
@@ -124,7 +131,7 @@
                     <button onclick="loadSampleData()" class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-lg font-medium text-xs hover:bg-indigo-100 dark:hover:bg-indigo-900/50 trans-all">
                         Exemplo
                     </button>
-                    
+
                     <label class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-xs cursor-pointer shadow-lg shadow-indigo-500/30 trans-all hover:-translate-y-0.5">
                         <i class="fa-solid fa-upload mr-1"></i> CSV
                         <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleFileUpload(this)">
@@ -134,7 +141,7 @@
 
             <!-- VIEWS CONTAINER -->
             <div class="flex-1 overflow-y-auto p-6 relative">
-                
+
                 <!-- VIEW 1: DASHBOARD GERAL -->
                 <div id="view-dashboard" class="space-y-6 animate-fade-in pb-20">
                     <!-- KPIs Section -->
@@ -243,7 +250,7 @@
 
                     <!-- Bottom Section: Split View -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        
+
                         <!-- Top Products -->
                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
                             <div class="p-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
@@ -341,21 +348,57 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyCod8xty3OOZZ1YUk97rYvrCnanPe8_yXg"; 
-        let fullData = []; // Armazena TODOS os dados brutos
-        let currentData = []; // Armazena dados FILTRADOS
-        let charts = {}; 
+        /**
+         * Chave de API para o Google Gemini.
+         * @type {string}
+         */
+        const apiKey = "AIzaSyCod8xty3OOZZ1YUk97rYvrCnanPe8_yXg";
+
+        /**
+         * Armazena TODOS os dados brutos de vendas carregados.
+         * @type {Array<Object>}
+         */
+        let fullData = [];
+
+        /**
+         * Armazena os dados FILTRADOS que estão sendo exibidos atualmente.
+         * @type {Array<Object>}
+         */
+        let currentData = [];
+
+        /**
+         * Objeto para armazenar as instâncias dos gráficos Chart.js.
+         * @type {Object<string, Chart>}
+         */
+        let charts = {};
+
+        /**
+         * Objeto para armazenar as estatísticas calculadas (KPIs).
+         * @type {Object}
+         */
         let stats = {};
+
+        /**
+         * Objeto para armazenar dados formatados para séries temporais.
+         * @type {Object}
+         */
         let timeSeriesData = {};
-        
+
         // --- Filters Logic ---
+
+        /**
+         * Filtra os dados de vendas com base no número de dias especificado e atualiza a interface.
+         *
+         * @param {number|string} days - O número de dias para filtrar (ex: 7, 30) ou 'all' para todos os dados.
+         * @returns {void}
+         */
         function filterByDate(days) {
             // UI Updates
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
                 btn.classList.add('text-gray-600', 'dark:text-gray-300');
             });
-            
+
             const activeBtn = days === 'all' ? 'btn-all' : `btn-${days}d`;
             const btn = document.getElementById(activeBtn);
             btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
@@ -369,14 +412,19 @@
                 cutoff.setDate(cutoff.getDate() - days);
                 currentData = fullData.filter(d => new Date(d.date) >= cutoff);
             }
-            
+
             calculateStats();
             updateUI();
         }
 
+        /**
+         * Exporta os dados filtrados atuais (currentData) para um arquivo CSV e inicia o download.
+         *
+         * @returns {void}
+         */
         function exportData() {
             if (!currentData.length) return alert("Sem dados para exportar");
-            
+
             // Criar CSV
             const csv = Papa.unparse(currentData);
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -391,6 +439,13 @@
         }
 
         // --- Theme Logic ---
+
+        /**
+         * Alterna entre os temas claro (light) e escuro (dark) da interface.
+         * Salva a preferência do usuário no localStorage e atualiza os gráficos.
+         *
+         * @returns {void}
+         */
         function toggleTheme() {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
@@ -405,10 +460,18 @@
             }
             updateChartsTheme();
         }
+
+        // Verifica a preferência de tema salva ou do sistema ao carregar a página
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
             document.getElementById('theme-icon').className = 'fa-solid fa-sun';
         }
+
+        /**
+         * Atualiza as cores globais e de grade do Chart.js para corresponder ao tema atual (claro/escuro).
+         *
+         * @returns {void}
+         */
         function updateChartsTheme() {
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#cbd5e1' : '#475569';
@@ -419,6 +482,13 @@
         }
 
         // --- View Switching ---
+
+        /**
+         * Alterna a visualização principal entre o Dashboard e a página de Previsões.
+         *
+         * @param {string} viewName - O ID da visualização a ser exibida ('dashboard' ou 'forecast').
+         * @returns {void}
+         */
         function switchView(viewName) {
             ['dashboard', 'forecast'].forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
@@ -430,6 +500,13 @@
         }
 
         // --- Data Loading ---
+
+        /**
+         * Gera e carrega um conjunto de dados de exemplo para demonstração do dashboard.
+         * Cria dados fictícios para 30 dias com categorias, produtos e métodos de pagamento variados.
+         *
+         * @returns {void}
+         */
         function loadSampleData() {
             const sample = [];
             const categories = ['Eletrônicos', 'Móveis', 'Serviços', 'Software', 'Acessórios'];
@@ -441,10 +518,10 @@
                 'Acessórios': ['Cabo HDMI', 'Hub USB', 'Mousepad', 'Suporte Notebook']
             };
             const methods = ['Crédito', 'PIX', 'Boleto'];
-            
+
             let date = new Date();
             date.setDate(date.getDate() - 30); // Começa 30 dias atrás
-            
+
             for(let i=0; i<=30; i++) {
                 const dailySales = Math.floor(Math.random() * 8) + 1; // Mais volume
                 for(let j=0; j<dailySales; j++) {
@@ -452,7 +529,7 @@
                     const prodList = products[cat];
                     const prod = prodList[Math.floor(Math.random() * prodList.length)];
                     const priceBase = Math.random() * 500 + 50;
-                    
+
                     sample.push({
                         date: date.toISOString().split('T')[0],
                         category: cat,
@@ -464,10 +541,17 @@
                 }
                 date.setDate(date.getDate() + 1);
             }
-            
+
             processData(sample);
         }
 
+        /**
+         * Manipula o evento de upload de arquivo CSV pelo usuário.
+         * Lê o arquivo, faz o parse usando PapaParse e normaliza os dados antes de processá-los.
+         *
+         * @param {HTMLInputElement} input - O elemento de entrada de arquivo HTML que disparou o evento.
+         * @returns {void}
+         */
         function handleFileUpload(input) {
             const file = input.files[0];
             if (!file) return;
@@ -487,12 +571,25 @@
             });
         }
 
+        /**
+         * Processa os dados brutos carregados (exemplo ou CSV).
+         * Ordena os dados por data e reinicia o filtro para exibir 'todos' os dados.
+         *
+         * @param {Array<Object>} data - A lista de objetos de dados de vendas.
+         * @returns {void}
+         */
         function processData(data) {
             fullData = data.sort((a,b) => new Date(a.date) - new Date(b.date));
             // Reset filters to ALL initially
             filterByDate('all');
         }
 
+        /**
+         * Calcula estatísticas agregadas (KPIs, contagens, totais) com base nos dados filtrados (currentData).
+         * Popula os objetos `stats` e `timeSeriesData` usados para renderizar a UI e os gráficos.
+         *
+         * @returns {void}
+         */
         function calculateStats() {
             const totalRev = currentData.reduce((sum, item) => sum + item.value, 0);
             const counts = {};
@@ -500,7 +597,7 @@
             const statusCount = {};
             const dateMap = {};
             const productSales = {}; // Para o Top Products
-            
+
             const tsCategories = {}; const tsPayments = {}; const tsStatus = {};
             const uniqueDates = [...new Set(currentData.map(d => d.date))].sort();
 
@@ -509,7 +606,7 @@
                 payments[d.payment] = (payments[d.payment] || 0) + 1;
                 statusCount[d.status] = (statusCount[d.status] || 0) + 1;
                 dateMap[d.date] = (dateMap[d.date] || 0) + d.value;
-                
+
                 // Top Products Logic
                 if(!productSales[d.product]) productSales[d.product] = { qty: 0, total: 0 };
                 productSales[d.product].qty += 1;
@@ -524,7 +621,7 @@
             Object.values(tsCategories).forEach(fillZeros); Object.values(tsPayments).forEach(fillZeros); Object.values(tsStatus).forEach(fillZeros);
 
             const topCat = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
-            
+
             // Ordenar produtos
             const topProducts = Object.entries(productSales)
                 .map(([name, data]) => ({ name, ...data }))
@@ -542,10 +639,16 @@
                 dailySales: dateMap,
                 topProducts: topProducts
             };
-            
+
             timeSeriesData = { dates: uniqueDates, categories: tsCategories, payments: tsPayments, status: tsStatus };
         }
 
+        /**
+         * Atualiza os elementos da interface do usuário com os dados calculados em `stats`.
+         * Atualiza KPIs, tabelas e chama as funções de renderização de gráficos.
+         *
+         * @returns {void}
+         */
         function updateUI() {
             const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('kpi-revenue').innerText = fmt.format(stats.revenue);
@@ -567,7 +670,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-            
+
             // Update Top Products Table
             const topBody = document.getElementById('topProductsBody');
             topBody.innerHTML = '';
@@ -586,13 +689,18 @@
             updateForecastView('general');
         }
 
+        /**
+         * Renderiza e atualiza os gráficos principais do dashboard (Linha, Barra e Rosca).
+         *
+         * @returns {void}
+         */
         function renderDashboardCharts() {
             updateChartsTheme();
             const commonOptions = { responsive: true, maintainAspectRatio: false, layout: { padding: 10 }, plugins: { legend: { labels: { usePointStyle: true, boxWidth: 8, padding: 20, font: { size: 12 } } } } };
 
             const dates = Object.keys(stats.dailySales).sort();
             const values = dates.map(d => stats.dailySales[d]);
-            
+
             initChart('lineChart', 'line', {
                 labels: dates,
                 datasets: [{ label: 'Vendas', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.4, pointRadius: 3 }]
@@ -611,23 +719,30 @@
             // MUDANÇA AQUI: De Radar para Doughnut
             initChart('polarChart', 'doughnut', {
                 labels: Object.keys(stats.statusBreakdown),
-                datasets: [{ 
-                    label: 'Status', 
-                    data: Object.values(stats.statusBreakdown), 
+                datasets: [{
+                    label: 'Status',
+                    data: Object.values(stats.statusBreakdown),
                     // Cores: Verde (Concluído), Amarelo (Pendente), Vermelho (Devolvido)
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                     borderWidth: 0,
                     hoverOffset: 4
                 }]
-            }, { 
-                ...commonOptions, 
+            }, {
+                ...commonOptions,
                 cutout: '75%', // Estilo Rosca
-                plugins: { 
-                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } 
-                } 
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
+                }
             });
         }
 
+        /**
+         * Atualiza a visualização do gráfico de previsão (Forecast) com base no tipo selecionado.
+         * Calcula a regressão linear e renderiza o gráfico com dados históricos e previstos.
+         *
+         * @param {string} type - O tipo de previsão a ser exibida ('general', 'categories', 'payments', 'status').
+         * @returns {void}
+         */
         function updateForecastView(type) {
             document.querySelectorAll('.forecast-btn').forEach(btn => {
                 if(btn.dataset.type === type) {
@@ -641,7 +756,7 @@
             const dates = timeSeriesData.dates || [];
             if(!dates.length) return;
             const datasets = [];
-            
+
             if (type === 'general') {
                 const values = dates.map(d => stats.dailySales[d] || 0);
                 const forecast = calculateForecast(dates, values);
@@ -658,6 +773,15 @@
             initChart('forecastChart', 'line', { labels: [...dates, ...getFutureDates(dates[dates.length-1], 7)], datasets: datasets.flat() }, { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { borderDash: [5,5], color: (ctx) => ctx.chart.options.borderColor } }, x: { grid: { display: false } } } });
         }
 
+        /**
+         * Cria um objeto de dataset formatado para o Chart.js contendo dados históricos e a linha de previsão tracejada.
+         *
+         * @param {string} label - O rótulo do dataset.
+         * @param {Array<number>} hist - Array de valores históricos.
+         * @param {Array<number>} future - Array de valores previstos.
+         * @param {string} color - A cor da linha (hex ou rgba).
+         * @returns {Array<Object>} Um array contendo dois objetos de dataset: um para a linha sólida (histórico) e um para a tracejada (previsão).
+         */
         function createForecastDataset(label, hist, future, color) {
             const padNull = Array(7).fill(null);
             const padHist = Array(hist.length).fill(null);
@@ -665,7 +789,23 @@
             return [{ label: label, data: [...hist, ...padNull], borderColor: color, backgroundColor: color, tension: 0.3, pointRadius: 2 },
                     { label: label + ' (Prev)', data: [...padHist, ...future], borderColor: color, borderDash: [5,5], pointStyle: 'rectRot' }];
         }
+
+        /**
+         * Gera uma lista de datas futuras a partir de uma data inicial.
+         *
+         * @param {string} last - A última data conhecida no formato YYYY-MM-DD.
+         * @param {number} days - O número de dias futuros a serem gerados.
+         * @returns {Array<string>} Uma lista de strings de data (YYYY-MM-DD).
+         */
         function getFutureDates(last, days) { const d = new Date(last); const res = []; for(let i=1; i<=days; i++) { d.setDate(d.getDate()+1); res.push(d.toISOString().split('T')[0]); } return res; }
+
+        /**
+         * Calcula uma previsão simples (Regressão Linear) para os próximos 7 dias com base em dados históricos.
+         *
+         * @param {Array<string>} dates - As datas correspondentes aos valores.
+         * @param {Array<number>} values - Os valores históricos.
+         * @returns {Array<number>} Um array com os valores previstos para os próximos 7 dias. Retorna zeros se não houver dados suficientes.
+         */
         function calculateForecast(dates, values) {
             const n = values.length; if(n<2) return Array(7).fill(0);
             const x = Array.from({length: n}, (_, i) => i);
@@ -674,6 +814,16 @@
             const res = []; for(let i=1; i<=7; i++) res.push(Math.max(0, slope*(n-1+i) + intercept)); return res;
         }
 
+        /**
+         * Inicializa ou atualiza uma instância de gráfico Chart.js.
+         * Se já existir um gráfico no canvas especificado, ele é destruído antes de criar um novo.
+         *
+         * @param {string} id - O ID do elemento canvas HTML.
+         * @param {string} type - O tipo de gráfico (ex: 'line', 'bar', 'doughnut').
+         * @param {Object} data - O objeto de dados do Chart.js.
+         * @param {Object} options - As opções de configuração do Chart.js.
+         * @returns {void}
+         */
         function initChart(id, type, data, options) {
             const canvas = document.getElementById(id); if(!canvas) return;
             if(charts[id]) charts[id].destroy();
@@ -681,8 +831,22 @@
         }
 
         // Chat & AI
+
+        /**
+         * Alterna a visibilidade do painel de chat lateral, deslizando-o para dentro ou fora da tela.
+         *
+         * @returns {void}
+         */
         function toggleChatPanel() { document.getElementById('ai-chat-panel').classList.toggle('translate-x-full'); }
-        async function analyzeSpecificChart(type) { 
+
+        /**
+         * Inicia uma análise de IA para um gráfico específico clicado pelo usuário.
+         * Abre o painel de chat, define uma pergunta padrão baseada no tipo de gráfico e envia para a IA.
+         *
+         * @param {string} type - O identificador do tipo de análise ('sales_trend', 'payment_methods', etc.).
+         * @returns {Promise<void>}
+         */
+        async function analyzeSpecificChart(type) {
             if(!currentData.length) return alert("Carregue dados primeiro");
             document.getElementById('ai-chat-panel').classList.remove('translate-x-full');
             const questions = {
@@ -694,6 +858,14 @@
             document.getElementById('chat-input').value = questions[type];
             await sendChatMessage(stats);
         }
+
+        /**
+         * Envia uma mensagem do usuário para a IA (Google Gemini) e exibe a resposta no chat.
+         * Pode incluir um contexto opcional (dados estatísticos) para ajudar a IA na análise.
+         *
+         * @param {Object} [ctx=null] - Contexto de dados opcional (objeto stats) para enviar à IA junto com a pergunta.
+         * @returns {Promise<void>}
+         */
         async function sendChatMessage(ctx = null) {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
