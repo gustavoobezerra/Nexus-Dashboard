@@ -1,0 +1,1 @@
+📊 Nexus ERP Analytics: Dashboard de Business Intelligence interativo e moderno. Possui visualização de dados em tempo real com Chart.js, módulo de previsão de vendas (Forecasting) e um Consultor de IA integrado (Google Gemini) para insights estratégicos. Desenvolvido como uma Single Page Application (SPA) leve usando HTML5, Tailwind CSS e JavaScript puro.
