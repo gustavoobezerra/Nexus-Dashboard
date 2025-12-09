@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Analytics Suite</title>
+    <title>Nexus ERP Analytics</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -39,26 +39,68 @@
         
         body { font-family: 'Inter', sans-serif; }
         .trans-all { transition: all 0.3s ease-in-out; }
+        
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* Chat Styles */
         .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; line-height: 1.5; }
         .chat-user { background-color: #4f46e5; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
         .chat-ai { background-color: #f1f5f9; border: 1px solid #e2e8f0; color: #334155; align-self: flex-start; border-bottom-left-radius: 2px; }
         .dark .chat-ai { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .chat-ai strong { color: #818cf8; }
+
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 300px; padding: 16px; border-radius: 8px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: translateX(120%); transition: transform 0.3s ease-out; display: flex; align-items: center; gap: 12px; border-left: 4px solid; }
+        .toast.show { transform: translateX(0); }
+        .toast-success { border-color: #10b981; }
+        .toast-error { border-color: #ef4444; }
+        .toast-info { border-color: #3b82f6; }
+        .dark .toast { background: #1e293b; color: white; }
+
+        /* Animation */
         @keyframes shine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
         .btn-shine { background: linear-gradient(to right, #4f46e5 20%, #818cf8 40%, #818cf8 60%, #4f46e5 80%); background-size: 200% auto; animation: shine 4s linear infinite; }
+
+        /* Print CSS - O Mágico do PDF */
+        @media print {
+            aside, header, #ai-chat-panel, .no-print { display: none !important; }
+            body, main { overflow: visible !important; height: auto !important; background: white !important; color: black !important; }
+            .card, .bg-white { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+            #view-dashboard { display: block !important; padding: 0 !important; }
+            /* Ajuste para caber gráficos na folha */
+            canvas { max-height: 250px !important; } 
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 dark:bg-slate-950 dark:text-gray-100 trans-all overflow-hidden">
 
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- API Key Modal -->
+    <div id="api-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-96 transform scale-95 transition-transform" id="api-modal-content">
+            <h3 class="text-xl font-bold mb-2">Configurar IA</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Insira sua chave do Google Gemini para ativar o consultor inteligente.</p>
+            <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mb-4 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeApiModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">Cancelar</button>
+                <button onclick="saveApiKey()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Salvar</button>
+            </div>
+            <p class="text-xs text-center mt-4 text-gray-400">A chave fica salva apenas no seu navegador.</p>
+        </div>
+    </div>
+
     <div class="flex h-screen">
         
         <!-- SIDEBAR -->
-        <aside class="w-20 md:w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col flex-shrink-0 z-20 trans-all shadow-lg">
+        <aside class="w-20 md:w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col flex-shrink-0 z-20 trans-all shadow-lg print:hidden">
             <div class="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-gray-100 dark:border-slate-800">
                 <div class="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 font-bold text-xl">
                     <i class="fa-solid fa-layer-group text-2xl"></i>
@@ -98,7 +140,7 @@
         <main class="flex-1 flex flex-col min-w-0 relative">
             
             <!-- TOP BAR -->
-            <header class="h-auto md:h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between px-6 py-2 md:py-0 trans-all z-10 gap-2">
+            <header class="h-auto md:h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between px-6 py-2 md:py-0 trans-all z-10 gap-2 print:hidden">
                 <div class="flex items-center gap-4">
                     <h2 id="page-title" class="text-lg font-bold text-gray-700 dark:text-gray-100 hidden md:block">Visão Geral</h2>
                     
@@ -111,10 +153,22 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
+                    <!-- Config API -->
+                    <button onclick="openApiModal()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 trans-all" title="Configurar API Key">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <!-- Theme -->
                     <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:ring-2 ring-indigo-500 trans-all">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
                     </button>
                     
+                    <!-- Print -->
+                    <button onclick="window.print()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 trans-all" title="Imprimir Relatório">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
+
+                    <!-- Export -->
                     <button onclick="exportData()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 trans-all" title="Baixar CSV">
                         <i class="fa-solid fa-download"></i>
                     </button>
@@ -188,7 +242,7 @@
                     <!-- Charts Row 1 -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 no-print">
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                                     <i class="fa-solid fa-arrow-trend-up text-indigo-500"></i> Fluxo de Vendas
                                 </h3>
@@ -202,7 +256,7 @@
                         </div>
 
                         <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col relative group">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 no-print">
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Pagamentos</h3>
                                 <button onclick="analyzeSpecificChart('payment_methods')" class="text-xs flex items-center gap-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-300 px-3 py-1.5 rounded-full transition-colors border border-purple-100 dark:border-purple-800/50 shadow-sm btn-shine text-white font-medium border-0">
                                     <i class="fa-solid fa-wand-magic-sparkles"></i> Analisar
@@ -217,7 +271,7 @@
                     <!-- Charts Row 2 -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 no-print">
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Por Categoria</h3>
                                 <button onclick="analyzeSpecificChart('category_performance')" class="text-xs flex items-center gap-1 bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full transition-colors">
                                     <i class="fa-solid fa-magnifying-glass-chart"></i> Detalhes
@@ -229,21 +283,20 @@
                         </div>
 
                          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex justify-between items-center mb-4 no-print">
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Status Pedidos</h3>
                                 <button onclick="analyzeSpecificChart('order_status')" class="text-xs flex items-center gap-1 bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full transition-colors">
                                     <i class="fa-solid fa-magnifying-glass-chart"></i> Detalhes
                                 </button>
                             </div>
                             <div class="relative w-full h-80 flex justify-center items-center flex-1">
-                                <canvas id="polarChart" class="w-full h-full"></canvas>
+                                <canvas id="doughnutChart" class="w-full h-full"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Bottom Section: Split View -->
+                    <!-- Bottom Section -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        
                         <!-- Top Products -->
                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
                             <div class="p-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
@@ -260,9 +313,7 @@
                                             <th class="p-4 text-right">Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="topProductsBody" class="divide-y divide-gray-100 dark:divide-slate-700 text-gray-600 dark:text-gray-300">
-                                        <!-- Populated via JS -->
-                                    </tbody>
+                                    <tbody id="topProductsBody" class="divide-y divide-gray-100 dark:divide-slate-700 text-gray-600 dark:text-gray-300"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -306,7 +357,7 @@
                                 <i class="fa-solid fa-chart-line text-purple-500"></i>
                                 <span id="forecast-title">Projeção Geral (Receita)</span>
                             </h3>
-                            <div class="flex bg-gray-100 dark:bg-slate-900 rounded-lg p-1 gap-1 overflow-x-auto max-w-full">
+                            <div class="flex bg-gray-100 dark:bg-slate-900 rounded-lg p-1 gap-1 overflow-x-auto max-w-full no-print">
                                 <button onclick="updateForecastView('general')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-sm" data-type="general">Geral</button>
                                 <button onclick="updateForecastView('categories')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-purple-600" data-type="categories">Categorias</button>
                                 <button onclick="updateForecastView('payments')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-purple-600" data-type="payments">Pagamentos</button>
@@ -321,7 +372,7 @@
             </div>
 
             <!-- CHAT PANEL -->
-            <div id="ai-chat-panel" class="absolute right-0 top-0 bottom-0 w-96 bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-30 transform translate-x-full trans-all flex flex-col">
+            <div id="ai-chat-panel" class="absolute right-0 top-0 bottom-0 w-96 bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-30 transform translate-x-full trans-all flex flex-col no-print">
                 <div class="p-4 bg-indigo-600 text-white flex justify-between items-center shadow-md">
                     <div class="flex items-center gap-2"><i class="fa-solid fa-robot"></i><h3 class="font-bold">Consultor IA</h3></div>
                     <button onclick="toggleChatPanel()" class="hover:bg-indigo-700 p-1 rounded trans-all"><i class="fa-solid fa-xmark"></i></button>
@@ -341,43 +392,63 @@
     </div>
 
     <script>
-        const apiKey = "AIzaSyCod8xty3OOZZ1YUk97rYvrCnanPe8_yXg"; 
-        let fullData = []; // Armazena TODOS os dados brutos
-        let currentData = []; // Armazena dados FILTRADOS
+        // --- API Config & Toast System ---
+        let apiKey = localStorage.getItem('nexus_api_key') || "";
+        
+        function openApiModal() { document.getElementById('api-modal').classList.remove('hidden'); document.getElementById('api-key-input').value = apiKey; }
+        function closeApiModal() { document.getElementById('api-modal').classList.add('hidden'); }
+        function saveApiKey() {
+            const val = document.getElementById('api-key-input').value.trim();
+            if(val) {
+                apiKey = val;
+                localStorage.setItem('nexus_api_key', apiKey);
+                showToast("Chave API salva com sucesso!", "success");
+                closeApiModal();
+            }
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            let icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'triangle-exclamation' : 'info-circle');
+            let color = type === 'success' ? 'text-green-500' : (type === 'error' ? 'text-red-500' : 'text-blue-500');
+            toast.innerHTML = `<i class="fa-solid fa-${icon} ${color} text-xl"></i><span class="font-medium">${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // --- Global State ---
+        let fullData = []; 
+        let currentData = [];
         let charts = {}; 
         let stats = {};
         let timeSeriesData = {};
         
         // --- Filters Logic ---
         function filterByDate(days) {
-            // UI Updates
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
                 btn.classList.add('text-gray-600', 'dark:text-gray-300');
             });
-            
             const activeBtn = days === 'all' ? 'btn-all' : `btn-${days}d`;
-            const btn = document.getElementById(activeBtn);
-            btn.classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
-            btn.classList.remove('text-gray-600', 'dark:text-gray-300');
+            document.getElementById(activeBtn).classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+            document.getElementById(activeBtn).classList.remove('text-gray-600', 'dark:text-gray-300');
 
             if (days === 'all') {
                 currentData = [...fullData];
             } else {
-                // Filtrar por dias
                 const cutoff = new Date();
                 cutoff.setDate(cutoff.getDate() - days);
                 currentData = fullData.filter(d => new Date(d.date) >= cutoff);
             }
-            
             calculateStats();
             updateUI();
         }
 
         function exportData() {
-            if (!currentData.length) return alert("Sem dados para exportar");
-            
-            // Criar CSV
+            if (!currentData.length) return showToast("Sem dados para exportar", "error");
             const csv = Papa.unparse(currentData);
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
@@ -388,6 +459,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            showToast("Download iniciado!", "success");
         }
 
         // --- Theme Logic ---
@@ -429,6 +501,19 @@
             setTimeout(() => Object.values(charts).forEach(c => c?.resize()), 50);
         }
 
+        // --- Helper Function: Map Columns Intelligently ---
+        function mapColumns(headers) {
+            const map = {
+                date: headers.find(h => /data|date|dt_venda|criado_em|time/i.test(h)) || null,
+                category: headers.find(h => /categoria|category|cat|setor|grupo/i.test(h)) || null,
+                product: headers.find(h => /produto|product|item|mercadoria|nome|descrição|cliente|customer/i.test(h)) || null,
+                value: headers.find(h => /valor|value|total|price|preço|amount|venda|custo/i.test(h)) || null,
+                payment: headers.find(h => /pagamento|payment|pgto|forma|metodo/i.test(h)) || null,
+                status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null
+            };
+            return map;
+        }
+
         // --- Data Loading ---
         function loadSampleData() {
             const sample = [];
@@ -443,10 +528,10 @@
             const methods = ['Crédito', 'PIX', 'Boleto'];
             
             let date = new Date();
-            date.setDate(date.getDate() - 30); // Começa 30 dias atrás
+            date.setDate(date.getDate() - 30); 
             
             for(let i=0; i<=30; i++) {
-                const dailySales = Math.floor(Math.random() * 8) + 1; // Mais volume
+                const dailySales = Math.floor(Math.random() * 8) + 1; 
                 for(let j=0; j<dailySales; j++) {
                     const cat = categories[Math.floor(Math.random() * categories.length)];
                     const prodList = products[cat];
@@ -457,15 +542,15 @@
                         date: date.toISOString().split('T')[0],
                         category: cat,
                         product: prod,
-                        value: parseFloat((priceBase * (1 + i/50)).toFixed(2)), // Tendência leve alta
+                        value: parseFloat((priceBase * (1 + i/50)).toFixed(2)),
                         payment: methods[Math.floor(Math.random() * methods.length)],
-                        status: Math.random() > 0.1 ? 'Concluído' : (Math.random() > 0.2 ? 'Pendente' : 'Devolvido')
+                        status: Math.random() > 0.1 ? 'Concluído' : (Math.random() > 0.3 ? 'Pendente' : 'Devolvido')
                     });
                 }
                 date.setDate(date.getDate() + 1);
             }
-            
             processData(sample);
+            showToast("Dados de exemplo carregados!", "success");
         }
 
         function handleFileUpload(input) {
@@ -474,22 +559,30 @@
             Papa.parse(file, {
                 header: true, dynamicTyping: true, skipEmptyLines: true,
                 complete: function(results) {
+                    // 1. Identify columns
+                    const headers = results.meta.fields || [];
+                    const map = mapColumns(headers);
+                    
+                    // 2. Map data
                     const norm = results.data.map(d => ({
-                        date: d.data || d.date || d.Data,
-                        category: d.categoria || d.category || 'Geral',
-                        product: d.produto || d.product || 'Item',
-                        value: parseFloat(d.valor || d.value || 0),
-                        payment: d.pagamento || d.payment || 'Outros',
-                        status: d.status || 'Concluído'
+                        date: map.date ? d[map.date] : (d.data || d.date || d.Data),
+                        category: map.category ? d[map.category] : (d.categoria || d.category || 'Geral'),
+                        product: map.product ? d[map.product] : (d.produto || d.product || 'Item'),
+                        value: map.value ? parseFloat(d[map.value]) : parseFloat(d.valor || d.value || 0),
+                        payment: map.payment ? d[map.payment] : (d.pagamento || d.payment || 'Outros'),
+                        status: map.status ? d[map.status] : (d.status || 'Concluído')
                     })).filter(d => d.value > 0);
-                    if(norm.length) processData(norm); else alert("CSV inválido.");
+
+                    if(norm.length) {
+                        processData(norm);
+                        showToast(`${norm.length} registros importados!`, "success");
+                    } else showToast("CSV inválido ou vazio.", "error");
                 }
             });
         }
 
         function processData(data) {
             fullData = data.sort((a,b) => new Date(a.date) - new Date(b.date));
-            // Reset filters to ALL initially
             filterByDate('all');
         }
 
@@ -499,7 +592,7 @@
             const payments = {};
             const statusCount = {};
             const dateMap = {};
-            const productSales = {}; // Para o Top Products
+            const productSales = {}; 
             
             const tsCategories = {}; const tsPayments = {}; const tsStatus = {};
             const uniqueDates = [...new Set(currentData.map(d => d.date))].sort();
@@ -510,7 +603,6 @@
                 statusCount[d.status] = (statusCount[d.status] || 0) + 1;
                 dateMap[d.date] = (dateMap[d.date] || 0) + d.value;
                 
-                // Top Products Logic
                 if(!productSales[d.product]) productSales[d.product] = { qty: 0, total: 0 };
                 productSales[d.product].qty += 1;
                 productSales[d.product].total += d.value;
@@ -524,12 +616,7 @@
             Object.values(tsCategories).forEach(fillZeros); Object.values(tsPayments).forEach(fillZeros); Object.values(tsStatus).forEach(fillZeros);
 
             const topCat = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
-            
-            // Ordenar produtos
-            const topProducts = Object.entries(productSales)
-                .map(([name, data]) => ({ name, ...data }))
-                .sort((a,b) => b.total - a.total)
-                .slice(0, 5);
+            const topProducts = Object.entries(productSales).map(([name, data]) => ({ name, ...data })).sort((a,b) => b.total - a.total).slice(0, 5);
 
             stats = {
                 revenue: totalRev,
@@ -542,7 +629,6 @@
                 dailySales: dateMap,
                 topProducts: topProducts
             };
-            
             timeSeriesData = { dates: uniqueDates, categories: tsCategories, payments: tsPayments, status: tsStatus };
         }
 
@@ -554,31 +640,21 @@
             document.getElementById('kpi-category').innerText = stats.topCategory;
             document.getElementById('kpi-growth').innerText = `${currentData.length} registros`;
 
-            // Update Transaction Table
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
             currentData.slice(-5).reverse().forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
-                tr.innerHTML = `
-                    <td class="p-4 font-medium">${row.date}</td>
-                    <td class="p-4 text-gray-500 dark:text-gray-400">${row.product}</td>
-                    <td class="p-4 text-right font-bold text-gray-700 dark:text-gray-200">${fmt.format(row.value)}</td>
-                `;
+                tr.innerHTML = `<td class="p-4 font-medium">${row.date}</td><td class="p-4 text-gray-500 dark:text-gray-400">${row.product}</td><td class="p-4 text-right font-bold text-gray-700 dark:text-gray-200">${fmt.format(row.value)}</td>`;
                 tbody.appendChild(tr);
             });
             
-            // Update Top Products Table
             const topBody = document.getElementById('topProductsBody');
             topBody.innerHTML = '';
             stats.topProducts.forEach(prod => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
-                tr.innerHTML = `
-                    <td class="p-4 font-medium text-gray-700 dark:text-gray-200">${prod.name}</td>
-                    <td class="p-4 text-right text-xs text-gray-500 dark:text-gray-400">${prod.qty} un</td>
-                    <td class="p-4 text-right font-bold text-indigo-600 dark:text-indigo-400">${fmt.format(prod.total)}</td>
-                `;
+                tr.innerHTML = `<td class="p-4 font-medium text-gray-700 dark:text-gray-200">${prod.name}</td><td class="p-4 text-right text-xs text-gray-500 dark:text-gray-400">${prod.qty} un</td><td class="p-4 text-right font-bold text-indigo-600 dark:text-indigo-400">${fmt.format(prod.total)}</td>`;
                 topBody.appendChild(tr);
             });
 
@@ -608,23 +684,20 @@
                 datasets: [{ label: 'R$', data: Object.values(stats.catBreakdown), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6'], borderRadius: 4 }]
             }, { ...commonOptions, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { borderDash: [5, 5], color: (ctx) => ctx.chart.options.borderColor } }, y: { grid: { display: false } } } });
 
-            // MUDANÇA AQUI: De Radar para Doughnut
-            initChart('polarChart', 'doughnut', {
+            // MUDANÇA REALIZADA: Doughnut em vez de Radar/Polar
+            initChart('doughnutChart', 'doughnut', {
                 labels: Object.keys(stats.statusBreakdown),
                 datasets: [{ 
-                    label: 'Status', 
+                    label: 'Pedidos', 
                     data: Object.values(stats.statusBreakdown), 
-                    // Cores: Verde (Concluído), Amarelo (Pendente), Vermelho (Devolvido)
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Verde, Amarelo, Vermelho
                     borderWidth: 0,
                     hoverOffset: 4
                 }]
             }, { 
                 ...commonOptions, 
-                cutout: '75%', // Estilo Rosca
-                plugins: { 
-                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } 
-                } 
+                cutout: '70%', 
+                plugins: { legend: { position: 'right', labels: { usePointStyle: true } } } 
             });
         }
 
@@ -683,7 +756,7 @@
         // Chat & AI
         function toggleChatPanel() { document.getElementById('ai-chat-panel').classList.toggle('translate-x-full'); }
         async function analyzeSpecificChart(type) { 
-            if(!currentData.length) return alert("Carregue dados primeiro");
+            if(!currentData.length) return showToast("Carregue dados primeiro", "info");
             document.getElementById('ai-chat-panel').classList.remove('translate-x-full');
             const questions = {
                 'sales_trend': 'Analise a tendência de vendas diárias.',
@@ -698,6 +771,8 @@
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text && !ctx) return;
+            if(!apiKey) return showToast("Configure sua API Key primeiro!", "error");
+
             const history = document.getElementById('chat-history');
             history.innerHTML += `<div class="chat-bubble chat-user">${text}</div>`;
             input.value = ''; history.scrollTop = history.scrollHeight;
@@ -708,14 +783,14 @@
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ contents: [{ parts: [{ text: `Analista ERP. Contexto: ${JSON.stringify(ctx || stats)}. Pergunta: "${text}". Responda curto em PT-BR markdown.` }] }] })
                 });
+                if(!response.ok) throw new Error("API Error");
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
                 history.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(data.candidates[0].content.parts[0].text)}</div>`;
                 history.scrollTop = history.scrollHeight;
-            } catch(e) { document.getElementById(loadingId).innerText = "Erro IA."; }
+            } catch(e) { document.getElementById(loadingId).innerText = "Erro: Verifique sua Chave API."; }
         }
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key==='Enter') sendChatMessage(); });
     </script>
 </body>
-
 </html>
