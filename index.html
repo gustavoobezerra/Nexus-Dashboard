@@ -7,6 +7,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // Inicialização do Tailwind CSS (mantida no head para evitar FOUC)
         const initTailwind = () => {
             if (typeof tailwind !== 'undefined') {
                 tailwind.config = {
@@ -25,14 +26,15 @@
         };
         initTailwind();
     </script>
-    <!-- Chart.js -->
+    <!-- Bibliotecas via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Biblioteca para manipulação de datas (melhoria de robustez) -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    
     <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Marked -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -83,17 +85,38 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- API Key Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-96 transform scale-95 transition-transform" id="api-modal-content">
-            <h3 class="text-xl font-bold mb-2">Configurar IA</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Insira sua chave do Google Gemini para ativar o consultor inteligente.</p>
-            <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mb-4 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
-            <div class="flex justify-end gap-2">
-                <button onclick="closeApiModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">Cancelar</button>
-                <button onclick="saveApiKey()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Salvar</button>
+    <!-- Config Modal -->
+    <div id="config-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform">
+            <h3 class="text-xl font-bold mb-4 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-gear mr-2"></i> Configurações do Sistema</h3>
+            
+            <div class="space-y-4">
+                <!-- API Key -->
+                <div>
+                    <label for="api-key-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Chave API Gemini (Consultor IA)</label>
+                    <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mt-1 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Necessário para usar o Consultor IA. Fica salvo apenas no seu navegador.</p>
+                </div>
+
+                <!-- Meta Mensal -->
+                <div>
+                    <label for="monthly-goal-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Meta Mensal de Receita (R$)</label>
+                    <input type="number" id="monthly-goal-input" placeholder="Ex: 100000" class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mt-1 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Usado para calcular o progresso e gamificação.</p>
+                </div>
+
+                <!-- Validação: Valor Mínimo -->
+                <div>
+                    <label for="min-value-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor Mínimo de Transação (R$)</label>
+                    <input type="number" id="min-value-input" placeholder="Ex: 0.01" step="0.01" class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mt-1 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Transações abaixo deste valor serão marcadas como erro na validação.</p>
+                </div>
             </div>
-            <p class="text-xs text-center mt-4 text-gray-400">A chave fica salva apenas no seu navegador.</p>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeConfigModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">Cancelar</button>
+                <button onclick="saveConfig()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Salvar Configurações</button>
+            </div>
         </div>
     </div>
 
@@ -153,8 +176,8 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <!-- Config API -->
-                    <button onclick="openApiModal()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 trans-all" title="Configurar API Key">
+                    <!-- Config -->
+                    <button onclick="openConfigModal()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 trans-all" title="Configurações do Sistema">
                         <i class="fa-solid fa-gear"></i>
                     </button>
 
@@ -168,353 +191,615 @@
                         <i class="fa-solid fa-print"></i>
                     </button>
 
-                    <!-- Export -->
-                    <button onclick="exportData()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 trans-all" title="Baixar CSV">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
-
-                    <div class="h-6 w-[1px] bg-gray-300 dark:bg-slate-700 mx-1"></div>
-
-                    <button onclick="loadSampleData()" class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 rounded-lg font-medium text-xs hover:bg-indigo-100 dark:hover:bg-indigo-900/50 trans-all">
-                        Exemplo
-                    </button>
-                    
-                    <label class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-xs cursor-pointer shadow-lg shadow-indigo-500/30 trans-all hover:-translate-y-0.5">
-                        <i class="fa-solid fa-upload mr-1"></i> CSV
-                        <input type="file" id="csvUpload" accept=".csv" class="hidden" onchange="handleFileUpload(this)">
-                    </label>
+                    <!-- Data Load -->
+                    <div class="relative">
+                        <input type="file" id="csv-file-input" accept=".csv" onchange="handleFileUpload(this)" class="hidden">
+                        <button onclick="document.getElementById('csv-file-input').click()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 trans-all">
+                            <i class="fa-solid fa-file-csv mr-2"></i> CSV
+                        </button>
+                        <button onclick="loadSampleData()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600 trans-all ml-2">
+                            <i class="fa-solid fa-flask mr-2"></i> Exemplo
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            <!-- VIEWS CONTAINER -->
-            <div class="flex-1 overflow-y-auto p-6 relative">
+            <!-- CONTENT AREA -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-hide">
                 
-                <!-- VIEW 1: DASHBOARD GERAL -->
-                <div id="view-dashboard" class="space-y-6 animate-fade-in pb-20">
-                    <!-- KPIs Section -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden group">
-                            <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 trans-all">
-                                <i class="fa-solid fa-sack-dollar text-9xl"></i>
-                            </div>
-                            <p class="text-indigo-100 font-medium text-sm">Receita Total</p>
-                            <h3 class="text-3xl font-bold mt-1" id="kpi-revenue">R$ 0,00</h3>
-                            <p class="text-xs text-indigo-200 mt-2 bg-white/20 inline-block px-2 py-1 rounded" id="kpi-growth">--</p>
+                <!-- DASHBOARD VIEW -->
+                <div id="view-dashboard" class="view-panel grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    
+                    <!-- Meta Mensal -->
+                    <div class="lg:col-span-4 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">Meta Mensal de Receita</h4>
+                            <p id="monthly-goal-display" class="text-xl font-bold text-gray-800 dark:text-gray-100">R$ 0,00</p>
                         </div>
-
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 trans-all">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Vendas Totais</p>
-                                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="kpi-sales">0</h3>
-                                </div>
-                                <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-green-600 dark:text-green-400">
-                                    <i class="fa-solid fa-cart-shopping"></i>
-                                </div>
+                        <div class="mt-3">
+                            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3">
+                                <div id="goal-progress-bar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
                             </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 trans-all">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Ticket Médio</p>
-                                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mt-1" id="kpi-ticket">R$ 0,00</h3>
-                                </div>
-                                <div class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg text-purple-600 dark:text-purple-400">
-                                    <i class="fa-solid fa-receipt"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 trans-all">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Top Categoria</p>
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mt-1 truncate" id="kpi-category">-</h3>
-                                </div>
-                                <div class="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg text-orange-600 dark:text-orange-400">
-                                    <i class="fa-solid fa-trophy"></i>
-                                </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <p class="text-green-600 dark:text-green-400 font-medium" id="goal-progress-text">0% Atingido</p>
+                                <p class="text-gray-500 dark:text-gray-400" id="goal-remaining-text">R$ 0,00 Restante</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Charts Row 1 -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4 no-print">
-                                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                                    <i class="fa-solid fa-arrow-trend-up text-indigo-500"></i> Fluxo de Vendas
-                                </h3>
-                                <button onclick="analyzeSpecificChart('sales_trend')" class="text-xs flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-full transition-colors border border-indigo-100 dark:border-indigo-800/50">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Insight
-                                </button>
-                            </div>
-                            <div class="relative w-full h-80 flex-1">
-                                <canvas id="lineChart" class="w-full h-full"></canvas>
-                            </div>
+                    <!-- KPIs -->
+                    <div class="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Receita Total</p>
+                            <h3 id="kpi-revenue" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">R$ 0,00</h3>
+                            <p id="kpi-growth" class="text-xs text-gray-400 mt-1">0 registros</p>
                         </div>
-
-                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col relative group">
-                            <div class="flex justify-between items-center mb-4 no-print">
-                                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Pagamentos</h3>
-                                <button onclick="analyzeSpecificChart('payment_methods')" class="text-xs flex items-center gap-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-300 px-3 py-1.5 rounded-full transition-colors border border-purple-100 dark:border-purple-800/50 shadow-sm btn-shine text-white font-medium border-0">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Analisar
-                                </button>
-                            </div>
-                            <div class="relative w-full h-80 flex justify-center items-center flex-1">
-                                <canvas id="paymentChart" class="w-full h-full"></canvas>
-                            </div>
+                        <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Volume de Vendas</p>
+                            <h3 id="kpi-sales" class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">0</h3>
+                            <p class="text-xs text-gray-400 mt-1">Total de transações</p>
+                        </div>
+                        <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Ticket Médio</p>
+                            <h3 id="kpi-ticket" class="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">R$ 0,00</h3>
+                            <p class="text-xs text-gray-400 mt-1">Média por transação</p>
+                        </div>
+                        <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Top Categoria</p>
+                            <h3 id="kpi-category" class="text-2xl font-bold text-pink-600 dark:text-pink-400 mt-1">-</h3>
+                            <p class="text-xs text-gray-400 mt-1">Em volume de vendas</p>
                         </div>
                     </div>
 
-                    <!-- Charts Row 2 -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                         <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4 no-print">
-                                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Por Categoria</h3>
-                                <button onclick="analyzeSpecificChart('category_performance')" class="text-xs flex items-center gap-1 bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full transition-colors">
-                                    <i class="fa-solid fa-magnifying-glass-chart"></i> Detalhes
-                                </button>
-                            </div>
-                            <div class="relative w-full h-80 flex-1">
-                                <canvas id="barChart" class="w-full h-full"></canvas>
-                            </div>
+                    <!-- GRÁFICO DE LINHA - Vendas Diárias -->
+                    <div class="lg:col-span-3 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Tendência de Vendas Diárias <span id="sales-trend-filter" class="text-base font-normal text-gray-500 dark:text-gray-400"></span></h4>
+                            <button onclick="analyzeSpecificChart('sales_trend')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
                         </div>
-
-                         <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col">
-                            <div class="flex justify-between items-center mb-4 no-print">
-                                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">Status Pedidos</h3>
-                                <button onclick="analyzeSpecificChart('order_status')" class="text-xs flex items-center gap-1 bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full transition-colors">
-                                    <i class="fa-solid fa-magnifying-glass-chart"></i> Detalhes
-                                </button>
-                            </div>
-                            <div class="relative w-full h-80 flex justify-center items-center flex-1">
-                                <canvas id="doughnutChart" class="w-full h-full"></canvas>
-                            </div>
+                        <div class="h-80">
+                            <canvas id="lineChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Bottom Section -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Top Products -->
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-                            <div class="p-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                                    <i class="fa-solid fa-crown text-yellow-500"></i> Top Produtos
-                                </h3>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-gray-400 uppercase text-xs">
-                                        <tr>
-                                            <th class="p-4">Produto</th>
-                                            <th class="p-4 text-right">Qtd</th>
-                                            <th class="p-4 text-right">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="topProductsBody" class="divide-y divide-gray-100 dark:divide-slate-700 text-gray-600 dark:text-gray-300"></tbody>
-                                </table>
-                            </div>
+                    <!-- GRÁFICO DE DONUT - Status dos Pedidos -->
+                    <div class="lg:col-span-1 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Status dos Pedidos</h4>
+                            <button onclick="analyzeSpecificChart('order_status')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
                         </div>
+                        <div class="h-80 flex items-center justify-center">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
 
-                         <!-- Recent Transactions -->
-                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-                            <div class="p-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-                                <h3 class="font-bold text-gray-800 dark:text-gray-100">Transações Recentes</h3>
-                                <span class="text-xs text-gray-400">Últimas 5</span>
+                    <!-- GRÁFICO DE BARRA - Desempenho por Categoria -->
+                    <div class="lg:col-span-2 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Desempenho por Categoria (R$)</h4>
+                            <button onclick="analyzeSpecificChart('category_performance')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO DE BARRA - Métodos de Pagamento -->
+                    <div class="lg:col-span-2 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Métodos de Pagamento (Qtd)</h4>
+                            <button onclick="analyzeSpecificChart('payment_methods')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- TABELA - Top Produtos -->
+                    <div class="lg:col-span-2 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-lg font-semibold mb-4">Top 5 Produtos</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topProductsBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
+                                    <!-- Rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TABELA - Transações Recentes -->
+                    <div class="lg:col-span-2 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-lg font-semibold mb-4">Transações Recentes</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTableBody" class="bg-white dark:bg-slate-900 divide-y divide-gray-100 dark:divide-slate-800">
+                                    <!-- Rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FORECAST VIEW -->
+                <div id="view-forecast" class="view-panel hidden">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                            <h4 class="text-lg font-semibold mb-4" id="forecast-title">Previsão de Vendas (Próximos 7 Dias)</h4>
+                            
+                            <!-- Filtros de Previsão -->
+                            <div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1 mb-4 w-fit">
+                                <button onclick="updateForecastView('general')" data-type="general" class="forecast-btn px-3 py-1 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-sm">Geral</button>
+                                <button onclick="updateForecastView('categories')" data-type="categories" class="forecast-btn px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700">Por Categoria</button>
+                                <button onclick="updateForecastView('payments')" data-type="payments" class="forecast-btn px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700">Por Pagamento</button>
+                                <button onclick="updateForecastView('status')" data-type="status" class="forecast-btn px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-slate-700">Por Status</button>
                             </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-gray-400 uppercase text-xs">
-                                        <tr>
-                                            <th class="p-4">Data</th>
-                                            <th class="p-4">Produto</th>
-                                            <th class="p-4 text-right">Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="dataTableBody" class="divide-y divide-gray-100 dark:divide-slate-700 text-gray-600 dark:text-gray-300">
-                                        <tr><td colspan="3" class="p-8 text-center text-gray-400 italic">Nenhum dado carregado.</td></tr>
-                                    </tbody>
-                                </table>
+
+                            <div class="h-96">
+                                <canvas id="forecastChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW 2: FORECAST -->
-                <div id="view-forecast" class="space-y-6 hidden animate-fade-in pb-20">
-                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg">
-                        <h2 class="text-3xl font-bold mb-2">Inteligência Preditiva</h2>
-                        <p class="text-indigo-100 max-w-2xl">
-                            Utilizamos algoritmos de regressão linear para analisar tendências e projetar os próximos 7 dias.
-                        </p>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
-                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-purple-500"></i>
-                                <span id="forecast-title">Projeção Geral (Receita)</span>
-                            </h3>
-                            <div class="flex bg-gray-100 dark:bg-slate-900 rounded-lg p-1 gap-1 overflow-x-auto max-w-full no-print">
-                                <button onclick="updateForecastView('general')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-sm" data-type="general">Geral</button>
-                                <button onclick="updateForecastView('categories')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-purple-600" data-type="categories">Categorias</button>
-                                <button onclick="updateForecastView('payments')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-purple-600" data-type="payments">Pagamentos</button>
-                                <button onclick="updateForecastView('status')" class="forecast-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-gray-500 dark:text-gray-400 hover:text-purple-600" data-type="status">Status</button>
-                            </div>
-                        </div>
-                        <div class="relative w-full h-96">
-                            <canvas id="forecastChart" class="w-full h-full"></canvas>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            <!-- CHAT PANEL -->
-            <div id="ai-chat-panel" class="absolute right-0 top-0 bottom-0 w-96 bg-white dark:bg-slate-900 border-l border-gray-200 dark:border-slate-800 shadow-2xl z-30 transform translate-x-full trans-all flex flex-col no-print">
-                <div class="p-4 bg-indigo-600 text-white flex justify-between items-center shadow-md">
-                    <div class="flex items-center gap-2"><i class="fa-solid fa-robot"></i><h3 class="font-bold">Consultor IA</h3></div>
-                    <button onclick="toggleChatPanel()" class="hover:bg-indigo-700 p-1 rounded trans-all"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div id="chat-history" class="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-slate-950 flex flex-col space-y-3">
-                    <div class="chat-bubble chat-ai">Olá! Sou seu assistente executivo. Analiso seus dados em tempo real.</div>
-                </div>
-                <div class="p-4 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800">
-                    <div class="relative">
-                        <textarea id="chat-input" rows="2" placeholder="Ex: Analise a tendência..." class="w-full p-3 pr-10 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-transparent focus:bg-white dark:focus:bg-slate-950 border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none trans-all"></textarea>
-                        <button onclick="sendChatMessage()" class="absolute right-2 bottom-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 p-1 trans-all"><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            </div>
-
         </main>
+
+        <!-- AI CHAT PANEL -->
+        <div id="ai-chat-panel" class="fixed right-0 top-0 h-full w-80 bg-white dark:bg-slate-900 shadow-2xl z-30 transform translate-x-full transition-transform duration-300 flex flex-col print:hidden">
+            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-blue-600 dark:text-blue-400"><i class="fa-solid fa-robot mr-2"></i> Consultor IA</h3>
+                <button onclick="toggleChatPanel()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div id="chat-history" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-3 scrollbar-hide">
+                <div class="chat-bubble chat-ai">Olá! Sou o seu assistente de BI. Carregue seus dados e me pergunte sobre tendências, anomalias ou previsões.</div>
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="chat-input" placeholder="Pergunte sobre seus dados..." class="flex-1 p-3 border border-gray-300 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="sendChatMessage()" class="w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- API Config & Toast System ---
-        let apiKey = localStorage.getItem('nexus_api_key') || "";
+        // Variáveis de estado globais
+        const DEFAULT_CONFIG = {
+            geminiApiKey: 'SUA_CHAVE_AQUI',
+            monthlyGoal: 100000,
+            minValue: 0.01
+        };
+        let config = JSON.parse(localStorage.getItem('nexusConfig')) || DEFAULT_CONFIG;
         
-        function openApiModal() { document.getElementById('api-modal').classList.remove('hidden'); document.getElementById('api-key-input').value = apiKey; }
-        function closeApiModal() { document.getElementById('api-modal').classList.add('hidden'); }
-        function saveApiKey() {
-            const val = document.getElementById('api-key-input').value.trim();
-            if(val) {
-                apiKey = val;
-                localStorage.setItem('nexus_api_key', apiKey);
-                showToast("Chave API salva com sucesso!", "success");
-                closeApiModal();
+        let fullData = [];
+        let currentData = [];
+        let stats = {};
+        let timeSeriesData = {};
+        const charts = {};
+        let chartTheme = {};
+        let currentView = 'dashboard';
+        let lastValidation = null; // Para guardar o relatório de validação
+
+        // --- DATASET VALIDATOR CLASS ---
+        class DatasetValidator {
+            static validate(rawData, currentConfig) {
+                const map = DatasetValidator.mapColumns(rawData[0] ? Object.keys(rawData[0]) : []);
+                const values = rawData.map(d => map.value ? parseFloat(d[map.value]) : parseFloat(d.valor || d.value || 0)).filter(v => !isNaN(v));
+                
+                // Estatísticas para Outliers
+                const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                const stdDev = Math.sqrt(values.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / values.length);
+                const zScoreLimit = 3; // 3 desvios padrão
+
+                const result = {
+                    valid: [],
+                    invalid: [],
+                    warnings: [],
+                    duplicates: [],
+                    summary: { total: rawData.length, valid: 0, invalid: 0, warnings: 0, successRate: '0%' }
+                };
+
+                const seen = new Set();
+
+                rawData.forEach((d, index) => {
+                    const rowIndex = index + 1;
+                    const errors = [];
+                    const warnings = [];
+                    
+                    // 1. Normalização e Validação de Colunas
+                    const dateStr = map.date ? d[map.date] : (d.data || d.date || d.Data);
+                    let date = luxon.DateTime.fromISO(dateStr);
+                    if (!date.isValid) {
+                        date = luxon.DateTime.fromFormat(dateStr, 'dd/MM/yyyy');
+                    }
+                    
+                    const valueRaw = map.value ? d[map.value] : (d.valor || d.value || 0);
+                    const value = parseFloat(valueRaw);
+
+                    const normalized = {
+                        date: date.isValid ? date.toISODate() : null,
+                        category: map.category ? d[map.category] : (d.categoria || d.category || 'Geral'),
+                        product: map.product ? d[map.product] : (d.produto || d.product || 'Item'),
+                        value: isNaN(value) ? 0 : value,
+                        payment: map.payment ? d[map.payment] : (d.pagamento || d.payment || 'Outros'),
+                        status: map.status ? d[map.status] : (d.status || 'Concluído')
+                    };
+
+                    // 2. Validação de Data
+                    if (!normalized.date) {
+                        errors.push(`Data inválida ou não encontrada: "${dateStr}"`);
+                    }
+
+                    // 3. Validação de Valor (usando config dinâmica)
+                    const minValue = currentConfig.minValue || 0.01;
+                    if (isNaN(normalized.value) || normalized.value < minValue) {
+                        errors.push(`Valor inválido ou abaixo do mínimo configurado (R$ ${minValue.toFixed(2)}): "${valueRaw}"`);
+                    }
+
+                    // 4. Validação de Pagamento (se configurado)
+                    if (config.allowedPayments && !config.allowedPayments.includes(normalized.payment)) {
+                        warnings.push(`Método de pagamento não padrão: "${normalized.payment}"`);
+                    }
+
+                    // 5. Validação de Outlier (aviso)
+                    if (stdDev > 0 && Math.abs(normalized.value - mean) / stdDev > zScoreLimit) {
+                        warnings.push(`Valor atípico (Outlier) detectado: R$ ${normalized.value.toFixed(2)}`);
+                        result.outliers.push({ rowIndex, original: d, value: normalized.value });
+                    }
+
+                    // 6. Validação de Duplicata (aviso)
+                    const key = `${normalized.date}-${normalized.product}-${normalized.value}`;
+                    if (seen.has(key)) {
+                        warnings.push(`Registro duplicado (mesma data, produto e valor)`);
+                        result.duplicates.push({ rowIndex, original: d });
+                    }
+                    seen.add(key);
+
+                    // 7. Classificação
+                    if (errors.length > 0) {
+                        result.invalid.push({ rowIndex, original: d, errors });
+                    } else {
+                        result.valid.push(normalized);
+                        if (warnings.length > 0) {
+                            result.warnings.push({ rowIndex, original: d, warnings });
+                        }
+                    }
+                });
+
+                // 8. Sumário
+                result.summary.valid = result.valid.length;
+                result.summary.invalid = result.invalid.length;
+                result.summary.warnings = result.warnings.length + result.duplicates.length + result.outliers.length;
+                const successRate = result.summary.total > 0 ? (result.summary.valid / result.summary.total) * 100 : 0;
+                result.summary.successRate = `${successRate.toFixed(1)}%`;
+
+                return result;
+            }
+
+            static mapColumns(headers) {
+                return {
+                    date: headers.find(h => /data|date|dt_venda|criado_em|time/i.test(h)) || null,
+                    category: headers.find(h => /categoria|category|cat|setor|grupo/i.test(h)) || null,
+                    product: headers.find(h => /produto|product|item|mercadoria|nome|descrição|cliente|customer/i.test(h)) || null,
+                    value: headers.find(h => /valor|value|total|price|preço|amount|venda|custo/i.test(h)) || null,
+                    payment: headers.find(h => /pagamento|payment|pgto|forma|metodo/i.test(h)) || null,
+                    status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null
+                };
             }
         }
 
-        function showToast(msg, type = 'info') {
+        // --- UTILS (Theme, Toast, API Key) ---
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+            }
+            updateChartsTheme(); // Chama a função de charts diretamente
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            let icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'triangle-exclamation' : 'info-circle');
-            let color = type === 'success' ? 'text-green-500' : (type === 'error' ? 'text-red-500' : 'text-blue-500');
-            toast.innerHTML = `<i class="fa-solid fa-${icon} ${color} text-xl"></i><span class="font-medium">${msg}</span>`;
+            
+            let icon = '';
+            if (type === 'success') icon = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+            else if (type === 'error') icon = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+            else icon = '<i class="fa-solid fa-circle-info text-blue-500"></i>';
+
+            toast.innerHTML = `${icon} <span class="text-sm">${message}</span>`;
             container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 10);
-            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
-        // --- Global State ---
-        let fullData = []; 
-        let currentData = [];
-        let charts = {}; 
-        let stats = {};
-        let timeSeriesData = {};
-        
-        // --- Filters Logic ---
-        function filterByDate(days) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
-                btn.classList.add('text-gray-600', 'dark:text-gray-300');
+        // --- UTILS (Theme, Toast, Config) ---
+        function openConfigModal() {
+            document.getElementById('api-key-input').value = config.geminiApiKey === DEFAULT_CONFIG.geminiApiKey ? '' : config.geminiApiKey;
+            document.getElementById('monthly-goal-input').value = config.monthlyGoal;
+            document.getElementById('min-value-input').value = config.minValue;
+            document.getElementById('config-modal').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').classList.add('hidden');
+        }
+
+        function saveConfig() {
+            const newConfig = {
+                geminiApiKey: document.getElementById('api-key-input').value.trim() || DEFAULT_CONFIG.geminiApiKey,
+                monthlyGoal: parseFloat(document.getElementById('monthly-goal-input').value) || DEFAULT_CONFIG.monthlyGoal,
+                minValue: parseFloat(document.getElementById('min-value-input').value) || DEFAULT_CONFIG.minValue
+            };
+
+            config = newConfig;
+            localStorage.setItem('nexusConfig', JSON.stringify(config));
+            
+            showToast("Configurações salvas com sucesso!", "success");
+            closeConfigModal();
+            updateDashboardUI(); // Atualiza a UI para refletir a nova meta
+        }
+
+        // --- VALIDATION REPORT UI ---
+        function showValidationReport(validation) {
+            lastValidation = validation; // Salva para download
+            const existingReport = document.getElementById('validation-report');
+            if (existingReport) existingReport.remove();
+
+            const report = document.createElement('div');
+            report.id = 'validation-report';
+            report.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm';
+            
+            report.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 p-0 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <!-- Header -->
+                    <div class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white z-10">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-bold">Relatório de Validação</h2>
+                                <p class="text-indigo-100 text-sm mt-1">Análise completa dos dados importados</p>
+                            </div>
+                            <button onclick="closeValidationReport()" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="card bg-gray-50 dark:bg-slate-800 p-4 rounded-xl text-center">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                            <p class="text-3xl font-bold text-gray-800 dark:text-white">${validation.summary.total}</p>
+                        </div>
+                        <div class="card bg-green-50 dark:bg-green-900/20 p-4 rounded-xl text-center">
+                            <p class="text-sm text-green-600">Válidos</p>
+                            <p class="text-3xl font-bold text-green-700 dark:text-green-400">${validation.summary.valid}</p>
+                        </div>
+                        <div class="card bg-red-50 dark:bg-red-900/20 p-4 rounded-xl text-center">
+                            <p class="text-sm text-red-600">Inválidos</p>
+                            <p class="text-3xl font-bold text-red-700 dark:text-red-400">${validation.summary.invalid}</p>
+                        </div>
+                        <div class="card bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl text-center">
+                            <p class="text-sm text-yellow-600">Avisos</p>
+                            <p class="text-3xl font-bold text-yellow-700 dark:text-yellow-400">${validation.summary.warnings}</p>
+                        </div>
+                    </div>
+
+                    <!-- Taxa de Sucesso -->
+                    <div class="px-6 pb-4">
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300">Taxa de Aprovação</span>
+                                <span class="text-2xl font-bold text-indigo-800 dark:text-indigo-200">${validation.summary.successRate}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3">
+                                <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-1000" style="width: ${validation.summary.successRate}"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Erros -->
+                    ${validation.invalid.length > 0 ? `
+                        <div class="px-6 pb-4">
+                            <div class="bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500 p-4 rounded">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-circle-xmark text-red-600 text-xl mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-red-800 dark:text-red-300 mb-2">
+                                            ${validation.invalid.length} Erro(s) Encontrado(s)
+                                        </h3>
+                                        <div class="space-y-2 max-h-48 overflow-y-auto">
+                                            ${validation.invalid.slice(0, 5).map(row => `
+                                                <div class="bg-white dark:bg-slate-800 p-3 rounded text-sm">
+                                                    <p class="font-bold text-red-700 dark:text-red-400">Linha ${row.rowIndex}:</p>
+                                                    <ul class="mt-1 space-y-1 text-red-600 dark:text-red-300">
+                                                        ${row.errors.map(err => `<li class="text-xs">• ${err}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            `).join('')}
+                                            ${validation.invalid.length > 5 ? `
+                                                <p class="text-center text-xs text-gray-500 dark:text-gray-400 pt-2">
+                                                    ... e mais ${validation.invalid.length - 5} erros
+                                                </p>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Avisos -->
+                    ${validation.warnings.length > 0 ? `
+                        <div class="px-6 pb-4">
+                            <div class="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 rounded">
+                                <div class="flex items-start gap-3">
+                                    <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+                                            ${validation.warnings.length} Aviso(s)
+                                        </h3>
+                                        <div class="space-y-1 max-h-32 overflow-y-auto">
+                                            ${validation.warnings.slice(0, 3).map(row => `
+                                                <p class="text-xs text-yellow-700 dark:text-yellow-300">
+                                                    Linha ${row.rowIndex}: ${row.warnings.join(', ')}
+                                                </p>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Duplicatas -->
+                    ${validation.duplicates.length > 0 ? `
+                        <div class="px-6 pb-4">
+                            <div class="bg-orange-50 dark:bg-orange-900/10 border-l-4 border-orange-500 p-4 rounded">
+                                <h3 class="font-bold text-orange-800 dark:text-orange-300 mb-2">
+                                    <i class="fa-solid fa-copy mr-2"></i>
+                                    ${validation.duplicates.length} Duplicata(s) Detectada(s)
+                                </h3>
+                                <p class="text-xs text-orange-600 dark:text-orange-300">
+                                    Registros com mesma data, produto e valor
+                                </p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Outliers -->
+                    ${validation.outliers.length > 0 ? `
+                        <div class="px-6 pb-4">
+                            <div class="bg-purple-50 dark:bg-purple-900/10 border-l-4 border-purple-500 p-4 rounded">
+                                <h3 class="font-bold text-purple-800 dark:text-purple-300 mb-2">
+                                    <i class="fa-solid fa-chart-line mr-2"></i>
+                                    ${validation.outliers.length} Outlier(s) Detectado(s)
+                                </h3>
+                                <p class="text-xs text-purple-600 dark:text-purple-300">
+                                    Valores estatisticamente atípicos - verifique se estão corretos
+                                </p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Footer -->
+                    <div class="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 p-6 flex gap-3 z-10">
+                        <button onclick="downloadErrorReport()" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors font-medium">
+                            <i class="fa-solid fa-download mr-2"></i>
+                            Baixar Relatório
+                        </button>
+                        <button onclick="closeValidationReport()" class="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium">
+                            <i class="fa-solid fa-check mr-2"></i>
+                            Continuar
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(report);
+        }
+
+        function closeValidationReport() {
+            const report = document.getElementById('validation-report');
+            if (report) report.remove();
+        }
+
+        function downloadErrorReport() {
+            if (!lastValidation) return;
+            
+            const validation = lastValidation;
+            let csvContent = "Linha,Tipo,Mensagem,Dados Originais\n";
+
+            // Adicionar erros
+            validation.invalid.forEach(row => {
+                row.errors.forEach(error => {
+                    csvContent += `${row.rowIndex},ERRO,"${error}","${JSON.stringify(row.original).replace(/"/g, '""')}"\n`;
+                });
             });
-            const activeBtn = days === 'all' ? 'btn-all' : `btn-${days}d`;
-            document.getElementById(activeBtn).classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
-            document.getElementById(activeBtn).classList.remove('text-gray-600', 'dark:text-gray-300');
 
-            if (days === 'all') {
-                currentData = [...fullData];
-            } else {
-                const cutoff = new Date();
-                cutoff.setDate(cutoff.getDate() - days);
-                currentData = fullData.filter(d => new Date(d.date) >= cutoff);
-            }
-            calculateStats();
-            updateUI();
-        }
+            // Adicionar avisos
+            validation.warnings.forEach(row => {
+                row.warnings.forEach(warning => {
+                    csvContent += `${row.rowIndex},AVISO,"${warning}","${JSON.stringify(row.original).replace(/"/g, '""')}"\n`;
+                });
+            });
 
-        function exportData() {
-            if (!currentData.length) return showToast("Sem dados para exportar", "error");
-            const csv = Papa.unparse(currentData);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            // Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", "relatorio_vendas.csv");
+            link.setAttribute("download", `relatorio_validacao_${luxon.DateTime.now().toISODate()}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast("Download iniciado!", "success");
+            
+            showToast("Relatório baixado!", "success");
         }
 
-        // --- Theme Logic ---
-        function toggleTheme() {
-            const html = document.documentElement;
-            const icon = document.getElementById('theme-icon');
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                icon.className = 'fa-solid fa-moon';
-                localStorage.theme = 'light';
-            } else {
-                html.classList.add('dark');
-                icon.className = 'fa-solid fa-sun';
-                localStorage.theme = 'dark';
+        // --- DATA (Loading, Processing, Filtering) ---
+
+        // Helper para determinar o formato da data
+        function getDateFormat() {
+            if (fullData.length === 0) return 'dd/MM';
+            
+            const years = new Set(fullData.map(d => luxon.DateTime.fromISO(d.date).year));
+            
+            // Se houver mais de um ano, mostra o ano.
+            if (years.size > 1) {
+                return 'dd/MM/yyyy';
             }
-            updateChartsTheme();
+            // Caso contrário, mostra apenas dia e mês.
+            return 'dd/MM';
         }
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.getElementById('theme-icon').className = 'fa-solid fa-sun';
-        }
-        function updateChartsTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#cbd5e1' : '#475569';
-            const gridColor = isDark ? '#334155' : '#e2e8f0';
-            Chart.defaults.color = textColor;
-            Chart.defaults.borderColor = gridColor;
-            Object.values(charts).forEach(chart => { if(chart) chart.update(); });
-        }
-
-        // --- View Switching ---
-        function switchView(viewName) {
-            ['dashboard', 'forecast'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                document.getElementById(`nav-${v}`).classList.remove('bg-indigo-50', 'dark:bg-indigo-900/20', 'text-indigo-600', 'dark:text-indigo-400');
-            });
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
-            document.getElementById(`nav-${viewName}`).classList.add('bg-indigo-50', 'dark:bg-indigo-900/20', 'text-indigo-600', 'dark:text-indigo-400');
-            setTimeout(() => Object.values(charts).forEach(c => c?.resize()), 50);
-        }
-
-        // --- Helper Function: Map Columns Intelligently ---
         function mapColumns(headers) {
-            const map = {
-                date: headers.find(h => /data|date|dt_venda|criado_em|time/i.test(h)) || null,
-                category: headers.find(h => /categoria|category|cat|setor|grupo/i.test(h)) || null,
-                product: headers.find(h => /produto|product|item|mercadoria|nome|descrição|cliente|customer/i.test(h)) || null,
-                value: headers.find(h => /valor|value|total|price|preço|amount|venda|custo/i.test(h)) || null,
-                payment: headers.find(h => /pagamento|payment|pgto|forma|metodo/i.test(h)) || null,
-                status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null
-            };
-            return map;
+            return DatasetValidator.mapColumns(headers); // Reutiliza o mapeamento da classe
         }
 
-        // --- Data Loading ---
         function loadSampleData() {
             const sample = [];
             const categories = ['Eletrônicos', 'Móveis', 'Serviços', 'Software', 'Acessórios'];
@@ -527,8 +812,8 @@
             };
             const methods = ['Crédito', 'PIX', 'Boleto'];
             
-            let date = new Date();
-            date.setDate(date.getDate() - 30); 
+            // Usando Luxon para datas
+            let date = luxon.DateTime.now().minus({ days: 30 });
             
             for(let i=0; i<=30; i++) {
                 const dailySales = Math.floor(Math.random() * 8) + 1; 
@@ -539,7 +824,7 @@
                     const priceBase = Math.random() * 500 + 50;
                     
                     sample.push({
-                        date: date.toISOString().split('T')[0],
+                        date: date.toISODate(),
                         category: cat,
                         product: prod,
                         value: parseFloat((priceBase * (1 + i/50)).toFixed(2)),
@@ -547,43 +832,107 @@
                         status: Math.random() > 0.1 ? 'Concluído' : (Math.random() > 0.3 ? 'Pendente' : 'Devolvido')
                     });
                 }
-                date.setDate(date.getDate() + 1);
+                date = date.plus({ days: 1 });
             }
-            processData(sample);
+            
+            // Simula a validação para dados de exemplo (todos válidos)
+            const validation = {
+                valid: sample,
+                invalid: [],
+                warnings: [],
+                duplicates: [],
+                outliers: [],
+                summary: { total: sample.length, valid: sample.length, invalid: 0, warnings: 0, successRate: '100%' }
+            };
+
+            processData(validation.valid);
             showToast("Dados de exemplo carregados!", "success");
         }
 
         function handleFileUpload(input) {
             const file = input.files[0];
             if (!file) return;
-            Papa.parse(file, {
-                header: true, dynamicTyping: true, skipEmptyLines: true,
-                complete: function(results) {
-                    // 1. Identify columns
-                    const headers = results.meta.fields || [];
-                    const map = mapColumns(headers);
-                    
-                    // 2. Map data
-                    const norm = results.data.map(d => ({
-                        date: map.date ? d[map.date] : (d.data || d.date || d.Data),
-                        category: map.category ? d[map.category] : (d.categoria || d.category || 'Geral'),
-                        product: map.product ? d[map.product] : (d.produto || d.product || 'Item'),
-                        value: map.value ? parseFloat(d[map.value]) : parseFloat(d.valor || d.value || 0),
-                        payment: map.payment ? d[map.payment] : (d.pagamento || d.payment || 'Outros'),
-                        status: map.status ? d[map.status] : (d.status || 'Concluído')
-                    })).filter(d => d.value > 0);
 
-                    if(norm.length) {
-                        processData(norm);
-                        showToast(`${norm.length} registros importados!`, "success");
-                    } else showToast("CSV inválido ou vazio.", "error");
+            showToast("Validando arquivo...", "info");
+
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    
+                    // Usa a configuração dinâmica do usuário
+                    const validation = DatasetValidator.validate(results.data, config);
+
+                    showValidationReport(validation);
+
+                    // Se tiver dados válidos, processar
+                    if (validation.valid.length > 0) {
+                        processData(validation.valid);
+                        showToast(
+                            `✅ ${validation.valid.length} registros importados com sucesso!`,
+                            "success"
+                        );
+                    }
+
+                    // Se tiver muitos erros, alertar
+                    if (validation.summary.invalid > validation.summary.valid) {
+                        showToast(
+                            `⚠️ ${validation.summary.invalid} registros rejeitados. Verifique o arquivo!`,
+                            "error"
+                        );
+                    }
+                },
+                error: function(err) {
+                    showToast(`Erro ao processar CSV: ${err.message}`, "error");
                 }
             });
         }
 
         function processData(data) {
-            fullData = data.sort((a,b) => new Date(a.date) - new Date(b.date));
+            fullData = data.sort((a,b) => luxon.DateTime.fromISO(a.date).toMillis() - luxon.DateTime.fromISO(b.date).toMillis());
             filterByDate('all');
+        }
+
+        function filterByDate(days) {
+            let filterText = '';
+            let forecastTitle = 'Previsão de Vendas (Próximos 7 Dias)'; // Default
+            
+            if (days === 7) {
+                filterText = '(Últimos 7 Dias)';
+            } else if (days === 30) {
+                filterText = '(Últimos 30 Dias)';
+                forecastTitle = 'Previsão de Vendas (Próximos 30 Dias)';
+            } else {
+                filterText = '(Todos os Dados)';
+                forecastTitle = 'Previsão de Vendas (Próximos 7 Dias)'; // Mantém 7 dias para "Todos"
+            }
+
+            document.getElementById('sales-trend-filter').innerText = filterText;
+            document.getElementById('forecast-title').innerText = forecastTitle;
+            const today = luxon.DateTime.now().startOf('day');
+            let startDate = null;
+
+            if (days === 'all') {
+                currentData = [...fullData];
+            } else {
+                startDate = today.minus({ days: days - 1 });
+                currentData = fullData.filter(d => luxon.DateTime.fromISO(d.date) >= startDate);
+            }
+            
+            // Atualiza o estado dos botões de filtro
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                btn.classList.add('text-gray-600', 'dark:text-gray-300', 'hover:bg-white', 'dark:hover:bg-slate-700');
+            });
+            const activeBtn = document.getElementById(`btn-${days}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                activeBtn.classList.remove('text-gray-600', 'dark:text-gray-300', 'hover:bg-white', 'dark:hover:bg-slate-700');
+            }
+
+            calculateStats();
+            updateDashboardUI();
         }
 
         function calculateStats() {
@@ -632,59 +981,130 @@
             timeSeriesData = { dates: uniqueDates, categories: tsCategories, payments: tsPayments, status: tsStatus };
         }
 
-        function updateUI() {
-            const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-            document.getElementById('kpi-revenue').innerText = fmt.format(stats.revenue);
-            document.getElementById('kpi-sales').innerText = stats.sales;
-            document.getElementById('kpi-ticket').innerText = fmt.format(stats.avgTicket);
-            document.getElementById('kpi-category').innerText = stats.topCategory;
-            document.getElementById('kpi-growth').innerText = `${currentData.length} registros`;
+        // --- CHARTS (Rendering, Forecasting) ---
+        function updateChartsTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const color = isDark ? '#e2e8f0' : '#334155';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
-            const tbody = document.getElementById('dataTableBody');
-            tbody.innerHTML = '';
-            currentData.slice(-5).reverse().forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
-                tr.innerHTML = `<td class="p-4 font-medium">${row.date}</td><td class="p-4 text-gray-500 dark:text-gray-400">${row.product}</td><td class="p-4 text-right font-bold text-gray-700 dark:text-gray-200">${fmt.format(row.value)}</td>`;
-                tbody.appendChild(tr);
+            chartTheme = {
+                color: color,
+                gridColor: gridColor,
+                font: { family: 'Inter', size: 12 },
+                tooltip: {
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    titleColor: color,
+                    bodyColor: color,
+                    borderColor: isDark ? '#475569' : '#cbd5e1',
+                    borderWidth: 1,
+                }
+            };
+
+            // Re-render all charts with new theme
+            Object.values(charts).forEach(chart => {
+                chart.options.color = chartTheme.color;
+                chart.options.scales.y.ticks.color = chartTheme.color;
+                chart.options.scales.x.ticks.color = chartTheme.color;
+                chart.options.scales.y.grid.color = chartTheme.gridColor;
+                if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = chartTheme.gridColor;
+                chart.options.plugins.tooltip = chartTheme.tooltip;
+                chart.update();
             });
+        }
+
+        function initChart(id, type, data, options) {
+            const canvas = document.getElementById(id); 
+            if(!canvas) return;
+            if(charts[id]) charts[id].destroy();
             
-            const topBody = document.getElementById('topProductsBody');
-            topBody.innerHTML = '';
-            stats.topProducts.forEach(prod => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
-                tr.innerHTML = `<td class="p-4 font-medium text-gray-700 dark:text-gray-200">${prod.name}</td><td class="p-4 text-right text-xs text-gray-500 dark:text-gray-400">${prod.qty} un</td><td class="p-4 text-right font-bold text-indigo-600 dark:text-indigo-400">${fmt.format(prod.total)}</td>`;
-                topBody.appendChild(tr);
-            });
+            const ctx = canvas.getContext('2d');
+            
+            // Merge common options with specific options
+            const commonOptions = { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                layout: { padding: 10 }, 
+                color: chartTheme.color,
+                font: chartTheme.font,
+                plugins: { 
+                    legend: { 
+                        labels: { 
+                            usePointStyle: true, 
+                            boxWidth: 8, 
+                            padding: 20, 
+                            font: chartTheme.font,
+                            color: chartTheme.color
+                        } 
+                    },
+                    tooltip: chartTheme.tooltip
+                },
+                scales: {
+                    y: {
+                        ticks: { color: chartTheme.color },
+                        grid: { borderDash: [5, 5], color: chartTheme.gridColor }
+                    },
+                    x: {
+                        ticks: { color: chartTheme.color },
+                        grid: { display: false }
+                    }
+                }
+            };
 
-            renderDashboardCharts();
-            updateForecastView('general');
+            charts[id] = new Chart(ctx, { 
+                type, 
+                data, 
+                options: Chart.helpers.merge(commonOptions, options) 
+            });
         }
 
         function renderDashboardCharts() {
             updateChartsTheme();
-            const commonOptions = { responsive: true, maintainAspectRatio: false, layout: { padding: 10 }, plugins: { legend: { labels: { usePointStyle: true, boxWidth: 8, padding: 20, font: { size: 12 } } } } };
 
             const dates = Object.keys(stats.dailySales).sort();
             const values = dates.map(d => stats.dailySales[d]);
             
+            const dateFormat = getDateFormat();
             initChart('lineChart', 'line', {
                 labels: dates,
                 datasets: [{ label: 'Vendas', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.4, pointRadius: 3 }]
-            }, { ...commonOptions, scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5], color: (ctx) => ctx.chart.options.borderColor } }, x: { grid: { display: false } } } });
+            }, { 
+                scales: { 
+                    y: { beginAtZero: true }, 
+                    x: { 
+                        grid: { display: false },
+                        ticks: {
+                            callback: function(value, index, ticks) {
+                                // Formata a data para o formato DD/MM ou DD/MM/YYYY
+                                return luxon.DateTime.fromISO(this.getLabelForValue(value)).toFormat(dateFormat);
+                            }
+                        }
+                    } 
+                } 
+            });
 
             initChart('paymentChart', 'bar', {
                 labels: Object.keys(stats.payBreakdown),
                 datasets: [{ label: 'Qtd', data: Object.values(stats.payBreakdown), backgroundColor: ['#3b82f6', '#14b8a6', '#f43f5e'], borderRadius: 4 }]
-            }, { ...commonOptions, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { borderDash: [5, 5], color: (ctx) => ctx.chart.options.borderColor } } } });
+            }, { 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { grid: { display: false } }, 
+                    y: { beginAtZero: true } 
+                } 
+            });
 
             initChart('barChart', 'bar', {
                 labels: Object.keys(stats.catBreakdown),
                 datasets: [{ label: 'R$', data: Object.values(stats.catBreakdown), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6'], borderRadius: 4 }]
-            }, { ...commonOptions, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { borderDash: [5, 5], color: (ctx) => ctx.chart.options.borderColor } }, y: { grid: { display: false } } } });
+            }, { 
+                indexAxis: 'y', 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { grid: { borderDash: [5, 5], color: chartTheme.gridColor } }, 
+                    y: { grid: { display: false } } 
+                } 
+            });
 
-            // MUDANÇA REALIZADA: Doughnut em vez de Radar/Polar
             initChart('doughnutChart', 'doughnut', {
                 labels: Object.keys(stats.statusBreakdown),
                 datasets: [{ 
@@ -695,10 +1115,63 @@
                     hoverOffset: 4
                 }]
             }, { 
-                ...commonOptions, 
                 cutout: '70%', 
                 plugins: { legend: { position: 'right', labels: { usePointStyle: true } } } 
             });
+        }
+
+        function getFutureDates(last, days) { 
+            const d = luxon.DateTime.fromISO(last); 
+            const res = []; 
+            for(let i=1; i<=days; i++) { 
+                res.push(d.plus({ days: i }).toISODate()); 
+            } 
+            return res; 
+        }
+
+        function calculateForecast(dates, values) {
+            const n = values.length; 
+            if(n<2) return Array(7).fill(0);
+            const x = Array.from({length: n}, (_, i) => i);
+            const sumX = x.reduce((a,b)=>a+b,0), sumY = values.reduce((a,b)=>a+b,0), sumXY = x.reduce((a,i)=>a+i*values[i],0), sumXX = x.reduce((a,i)=>a+i*i,0);
+            
+            // Regressão Linear Simples
+            const slope = (n*sumXY - sumX*sumY)/(n*sumXX - sumX*sumX);
+            const intercept = (sumY - slope*sumX)/n;
+            
+            const res = []; 
+            for(let i=1; i<=7; i++) {
+                // Previsão para os próximos 7 dias
+                res.push(Math.max(0, slope*(n-1+i) + intercept)); 
+            }
+            return res;
+        }
+
+        function createForecastDataset(label, hist, future, color) {
+            const padNull = Array(7).fill(null);
+            const padHist = Array(hist.length).fill(null);
+            padHist[hist.length-1] = hist[hist.length-1];
+            return [{ 
+                label: label, 
+                data: [...hist, ...padNull], 
+                borderColor: color, 
+                backgroundColor: color, 
+                tension: 0.3, 
+                pointRadius: 2,
+                segment: {
+                    borderColor: ctx => ctx.p0.parsed.y === null ? 'transparent' : color,
+                }
+            },
+            { 
+                label: label + ' (Prev)', 
+                data: [...padHist, ...future], 
+                borderColor: color, 
+                borderDash: [5,5], 
+                pointStyle: 'rectRot',
+                backgroundColor: 'transparent',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }];
         }
 
         function updateForecastView(type) {
@@ -711,10 +1184,11 @@
                     btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-purple-600', 'dark:text-purple-300', 'shadow-sm');
                 }
             });
+
             const dates = timeSeriesData.dates || [];
             if(!dates.length) return;
             const datasets = [];
-            
+
             if (type === 'general') {
                 const values = dates.map(d => stats.dailySales[d] || 0);
                 const forecast = calculateForecast(dates, values);
@@ -728,35 +1202,35 @@
                     datasets.push(createForecastDataset(key, values, forecast, colors[i]));
                 });
             }
-            initChart('forecastChart', 'line', { labels: [...dates, ...getFutureDates(dates[dates.length-1], 7)], datasets: datasets.flat() }, { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { borderDash: [5,5], color: (ctx) => ctx.chart.options.borderColor } }, x: { grid: { display: false } } } });
+
+            const forecastDateFormat = getDateFormat();
+            initChart('forecastChart', 'line', { 
+                labels: [...dates, ...getFutureDates(dates[dates.length-1], 7)], 
+                datasets: datasets.flat() 
+            }, { 
+                scales: { 
+                    y: { beginAtZero: true }, 
+                    x: { 
+                        grid: { display: false },
+                        ticks: {
+                            callback: function(value, index, ticks) {
+                                // Formata a data para o formato DD/MM ou DD/MM/YYYY
+                                return luxon.DateTime.fromISO(this.getLabelForValue(value)).toFormat(forecastDateFormat);
+                            }
+                        }
+                    } 
+                } 
+            });
         }
 
-        function createForecastDataset(label, hist, future, color) {
-            const padNull = Array(7).fill(null);
-            const padHist = Array(hist.length).fill(null);
-            padHist[hist.length-1] = hist[hist.length-1];
-            return [{ label: label, data: [...hist, ...padNull], borderColor: color, backgroundColor: color, tension: 0.3, pointRadius: 2 },
-                    { label: label + ' (Prev)', data: [...padHist, ...future], borderColor: color, borderDash: [5,5], pointStyle: 'rectRot' }];
-        }
-        function getFutureDates(last, days) { const d = new Date(last); const res = []; for(let i=1; i<=days; i++) { d.setDate(d.getDate()+1); res.push(d.toISOString().split('T')[0]); } return res; }
-        function calculateForecast(dates, values) {
-            const n = values.length; if(n<2) return Array(7).fill(0);
-            const x = Array.from({length: n}, (_, i) => i);
-            const sumX = x.reduce((a,b)=>a+b,0), sumY = values.reduce((a,b)=>a+b,0), sumXY = x.reduce((a,i)=>a+i*values[i],0), sumXX = x.reduce((a,i)=>a+i*i,0);
-            const slope = (n*sumXY - sumX*sumY)/(n*sumXX - sumX*sumX), intercept = (sumY - slope*sumX)/n;
-            const res = []; for(let i=1; i<=7; i++) res.push(Math.max(0, slope*(n-1+i) + intercept)); return res;
+        // --- AI (Chat, Analysis) ---
+        function toggleChatPanel() { 
+            document.getElementById('ai-chat-panel').classList.toggle('translate-x-full'); 
         }
 
-        function initChart(id, type, data, options) {
-            const canvas = document.getElementById(id); if(!canvas) return;
-            if(charts[id]) charts[id].destroy();
-            charts[id] = new Chart(canvas.getContext('2d'), { type, data, options });
-        }
-
-        // Chat & AI
-        function toggleChatPanel() { document.getElementById('ai-chat-panel').classList.toggle('translate-x-full'); }
         async function analyzeSpecificChart(type) { 
-            if(!currentData.length) return showToast("Carregue dados primeiro", "info");
+            if(!stats.sales) return showToast("Carregue dados primeiro", "info");
+            
             document.getElementById('ai-chat-panel').classList.remove('translate-x-full');
             const questions = {
                 'sales_trend': 'Analise a tendência de vendas diárias.',
@@ -767,30 +1241,143 @@
             document.getElementById('chat-input').value = questions[type];
             await sendChatMessage(stats);
         }
+
         async function sendChatMessage(ctx = null) {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
+            
             if(!text && !ctx) return;
-            if(!apiKey) return showToast("Configure sua API Key primeiro!", "error");
+            if(config.geminiApiKey === DEFAULT_CONFIG.geminiApiKey) return showToast("Configure sua API Key primeiro nas Configurações!", "error");
 
             const history = document.getElementById('chat-history');
             history.innerHTML += `<div class="chat-bubble chat-user">${text}</div>`;
-            input.value = ''; history.scrollTop = history.scrollHeight;
+            input.value = ''; 
+            history.scrollTop = history.scrollHeight;
+            
             const loadingId = 'load'+Date.now();
             history.innerHTML += `<div id="${loadingId}" class="chat-bubble chat-ai italic"><i class="fa-solid fa-circle-notch fa-spin"></i> ...</div>`;
+            history.scrollTop = history.scrollHeight;
+
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Analista ERP. Contexto: ${JSON.stringify(ctx || stats)}. Pergunta: "${text}". Responda curto em PT-BR markdown.` }] }] })
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${config.geminiApiKey}`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        contents: [{ 
+                            parts: [{ 
+                                text: `Você é um Analista de ERP. Seu objetivo é fornecer insights rápidos e práticos para um empresário. O contexto dos dados é: ${JSON.stringify(ctx || aiContext)}. A pergunta do usuário é: "${text}". Responda de forma concisa em português do Brasil, usando Markdown.` 
+                            }] 
+                        }] 
+                    })
                 });
+                
                 if(!response.ok) throw new Error("API Error");
                 const data = await response.json();
+                
                 document.getElementById(loadingId).remove();
-                history.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(data.candidates[0].content.parts[0].text)}</div>`;
+                
+                // Usando marked para renderizar o Markdown da resposta da IA
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                history.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(aiResponse)}</div>`;
                 history.scrollTop = history.scrollHeight;
-            } catch(e) { document.getElementById(loadingId).innerText = "Erro: Verifique sua Chave API."; }
+            } catch(e) { 
+                document.getElementById(loadingId).innerText = "Erro: Verifique sua Chave API ou a conexão."; 
+                showToast("Erro na comunicação com a API do Gemini.", "error");
+            }
         }
-        document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key==='Enter') sendChatMessage(); });
+
+        // --- UI (View Switching, Dashboard Update) ---
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active-nav', 'bg-indigo-600', 'text-white', 'dark:bg-indigo-700', 'dark:text-white');
+                item.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:bg-indigo-50', 'dark:hover:bg-indigo-900/20', 'hover:text-indigo-600', 'dark:hover:text-indigo-400');
+            });
+
+            const activeNav = document.getElementById(`nav-${view}`);
+            if (activeNav) {
+                activeNav.classList.add('active-nav', 'bg-indigo-600', 'text-white', 'dark:bg-indigo-700', 'dark:text-white');
+                activeNav.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:bg-indigo-50', 'dark:hover:bg-indigo-900/20', 'hover:text-indigo-600', 'dark:hover:text-indigo-400');
+            }
+
+            const title = view === 'dashboard' ? 'Visão Geral' : 'Previsões Futuras';
+            document.getElementById('page-title').innerText = title;
+
+            // Atualiza o conteúdo da view
+            if (view === 'dashboard') {
+                updateDashboardUI();
+            } else if (view === 'forecast') {
+                updateForecastView('general');
+            }
+        }
+
+        function updateDashboardUI() {
+            const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            // --- GAMIFICATION / META MENSAL ---
+            const goal = config.monthlyGoal;
+            const revenue = stats.revenue;
+            const progress = goal > 0 ? Math.min(100, (revenue / goal) * 100) : 0;
+            const remaining = Math.max(0, goal - revenue);
+
+            document.getElementById('monthly-goal-display').innerText = fmt.format(goal);
+            document.getElementById('goal-progress-bar').style.width = `${progress}%`;
+            document.getElementById('goal-progress-text').innerText = `${progress.toFixed(1)}% Atingido`;
+            document.getElementById('goal-remaining-text').innerText = `${fmt.format(remaining)} Restante`;
+
+            // Update KPIs
+            document.getElementById('kpi-revenue').innerText = fmt.format(revenue);
+            document.getElementById('kpi-sales').innerText = stats.sales;
+            document.getElementById('kpi-ticket').innerText = fmt.format(stats.avgTicket);
+            document.getElementById('kpi-category').innerText = stats.topCategory;
+            document.getElementById('kpi-growth').innerText = `${currentData.length} registros`;
+
+            // Update Recent Transactions Table
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            currentData.slice(-5).reverse().forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
+                tr.innerHTML = `<td class="p-4 font-medium">${row.date}</td><td class="p-4 text-gray-500 dark:text-gray-400">${row.product}</td><td class="p-4 text-right font-bold text-gray-700 dark:text-gray-200">${fmt.format(row.value)}</td>`;
+                tbody.appendChild(tr);
+            });
+            
+            // Update Top Products Table
+            const topBody = document.getElementById('topProductsBody');
+            topBody.innerHTML = '';
+            stats.topProducts.forEach(prod => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 trans-all";
+                tr.innerHTML = `<td class="p-4 font-medium text-gray-700 dark:text-gray-200">${prod.name}</td><td class="p-4 text-right text-xs text-gray-500 dark:text-gray-400">${prod.qty} un</td><td class="p-4 text-right font-bold text-indigo-600 dark:text-indigo-400">${fmt.format(prod.total)}</td>`;
+                topBody.appendChild(tr);
+            });
+
+            renderDashboardCharts();
+            if (currentView === 'forecast') {
+                updateForecastView('general');
+            }
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            
+            // Carrega dados de exemplo na inicialização
+            loadSampleData();
+
+            // Listener para o input do chat
+            document.getElementById('chat-input').addEventListener('keypress', (e) => { 
+                if(e.key==='Enter') sendChatMessage(); 
+            });
+            
+            // Atualiza a UI com as configurações iniciais
+            updateDashboardUI();
+        });
     </script>
 </body>
 </html>
