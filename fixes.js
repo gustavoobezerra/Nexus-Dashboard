@@ -54,6 +54,8 @@ const SafeStorage = {
 };
 
 // ==================== FIX 4: API Key (VIA PROXY) ====================
+// URL base para o proxy server. Usa localhost para desenvolvimento e Render para produção.
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://nexus-dashboard-qpdm.onrender.com';
 // A chave de API agora é gerenciada pelo servidor proxy (Flask) para maior segurança.
 // O frontend não precisa mais da chave.
 const GEMINI_API_KEY = null; // Chave removida do frontend
@@ -408,7 +410,7 @@ window.sendChatMessage = async function(ctx = null) {
                 const timeoutId = setTimeout(() => controller.abort(), 40000);
 
                 response = await fetch(
-                    `http://localhost:5000/api/gemini-proxy`,
+                    `${API_BASE_URL}/api/gemini-proxy`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
