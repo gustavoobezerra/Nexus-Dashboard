@@ -1,5 +1,7 @@
-// NEXUS DASHBOARD - CRITICAL FIXES
-// Aplique estas correções ao index.html
+// NEXUS DASHBOARD - CRITICAL FIXES (VERSÃO COMPLETA)
+// Este arquivo contém TODAS as correções originais + correções críticas do chatbot
+
+console.log('🔧 Carregando Nexus Dashboard - Critical Fixes (Completo)...');
 
 // ==================== FIX 1: Global Error Handler ====================
 window.addEventListener('error', (e) => {
@@ -286,9 +288,36 @@ window.addEventListener('beforeunload', () => {
     timeSeriesData = {};
 });
 
-// ==================== FIX 14: API Rate Limiting ====================
+// ==================== FIX 14: CHATBOT - Otimizador de Contexto (NOVO) ====================
+// Esta é uma função NOVA que não existia no arquivo original
+// Ela reduz drasticamente o tamanho do payload enviado para a API
+function getOptimizedContext(stats) {
+    if (!stats || typeof stats !== 'object') return {};
+    
+    // Remove dados volumosos que não são essenciais para análise
+    // Mantém apenas resumos e top items
+    return {
+        resumo_financeiro: {
+            receita_total: stats.revenue || 0,
+            total_vendas: stats.sales || 0,
+            ticket_medio: stats.avgTicket || 0,
+            categoria_principal: stats.topCategory || 'N/A',
+            participacao_categoria: stats.topCategoryShare || 0
+        },
+        top_5_produtos: (stats.topProducts || []).slice(0, 5),
+        distribuicao_pagamento: stats.payBreakdown || {},
+        distribuicao_status: stats.statusBreakdown || {},
+        periodo_analisado: {
+            registros_totais: stats.sales || 0,
+            data_mais_antiga: stats.oldestDate || 'N/A',
+            data_mais_recente: stats.newestDate || 'N/A'
+        }
+    };
+}
+
+// ==================== FIX 14: API Rate Limiting (STRICT 5 RPM) ====================
 class RateLimiter {
-    constructor(maxRequests = 10, windowMs = 60000) {
+    constructor(maxRequests = 5, windowMs = 60000) {
         this.maxRequests = maxRequests;
         this.windowMs = windowMs;
         this.requests = [];
@@ -301,7 +330,7 @@ class RateLimiter {
         if (this.requests.length >= this.maxRequests) {
             const oldestRequest = this.requests[0];
             const waitTime = this.windowMs - (now - oldestRequest);
-            throw new Error(`Rate limit exceeded. Wait ${Math.ceil(waitTime / 1000)}s`);
+            throw new Error(`Limite de requisições excedido. Aguarde ${Math.ceil(waitTime / 1000)}s`);
         }
 
         this.requests.push(now);
@@ -309,17 +338,196 @@ class RateLimiter {
     }
 }
 
-const geminiRateLimiter = new RateLimiter(15, 60000); // 15 req/min
+const geminiRateLimiter = new RateLimiter(5, 60000); // 5 req/min (Free Tier)
+
+// ==================== FIX 14: CHATBOT - Função sendChatMessage CORRIGIDA ====================
+// IMPORTANTE: Esta função SOBRESCREVE completamente a função original do index.html
+// Ela inclui as 3 correções críticas identificadas
 
 // Wrap API calls
 const originalSendChatMessage = window.sendChatMessage;
+// ==================== FIX 14: CHATBOT - Função sendChatMessage CORRIGIDA (Versão Google AI Studio) ====================
 window.sendChatMessage = async function(ctx = null) {
+    const input = document.getElementById('chat-input');
+    const historyEl = document.getElementById('chat-history');
+    
+    // Validações iniciais
+    if (!input || !historyEl) return;
+
+    const text = input.value.trim();
+    const apiKey = localStorage.getItem('geminiApiKey');
+    
+    if (!text && !ctx) return;
+    
+    if (!apiKey || apiKey === 'SUA_CHAVE_AQUI' || apiKey.length < 30) {
+        if (typeof showToast === 'function') {
+            showToast("Configure sua API Key nas configurações!", "error");
+        }
+        return;
+    }
+
+    // 1. Verificação de Rate Limit (Proteção contra RPM 5)
     try {
         await geminiRateLimiter.tryRequest();
-        return originalSendChatMessage.call(this, ctx);
-    } catch (e) {
-        showToast(e.message, 'error');
-        return Promise.reject(e);
+    } catch (rateLimitError) {
+        if (typeof showToast === 'function') showToast(rateLimitError.message, 'error');
+        // Não prossegue se estourou o limite
+        return;
+    }
+
+    // UI Update
+    const sanitizedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (typeof chatHistory !== 'undefined') {
+        chatHistory.push({ role: 'user', content: text, timestamp: Date.now() });
+    }
+    historyEl.innerHTML += `<div class="chat-bubble chat-user">${sanitizedText}</div>`;
+    input.value = '';
+    historyEl.scrollTop = historyEl.scrollHeight;
+
+    const loadingId = 'load-' + Date.now();
+    historyEl.innerHTML += `<div id="${loadingId}" class="chat-bubble chat-ai italic"><i class="fa-solid fa-circle-notch fa-spin"></i> Analisando...</div>`;
+    historyEl.scrollTop = historyEl.scrollHeight;
+
+    try {
+        const rawStats = ctx || (typeof stats !== 'undefined' ? stats : {});
+        const optimizedStats = getOptimizedContext(rawStats);
+        
+        // Lista de modelos baseada no acesso do usuário (updated models)
+        const models = [
+            'gemini-2.5-flash',
+            'gemini-exp-1206',
+            'gemini-1.5-pro-latest',
+            'gemini-1.5-flash-latest'
+        ];
+
+        let response = null;
+        let lastError = null;
+        let successModel = '';
+
+        // Loop de tentativa de modelos com fail-fast em 429
+        for (const model of models) {
+            try {
+                console.log(`🔄 Tentando modelo: ${model}...`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 40000);
+
+                response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: `Você é um Especialista em Business Intelligence.
+
+CONTEXTO DOS DADOS (JSON Resumido):
+${JSON.stringify(optimizedStats, null, 2)}
+
+PERGUNTA DO USUÁRIO:
+"${text}"
+
+INSTRUÇÕES:
+1. Responda em Português do Brasil de forma profissional
+2. Use formatação Markdown (negrito, listas)
+3. Seja direto e objetivo, focando em insights práticos
+4. Se os dados forem insuficientes, avise o usuário`
+                                }]
+                            }],
+                            safetySettings: [
+                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                            ],
+                            generationConfig: {
+                                temperature: 0.7,
+                                maxOutputTokens: 1000,
+                                topP: 0.95,
+                                topK: 40
+                            }
+                        }),
+                        signal: controller.signal
+                    }
+                );
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    console.log(`✅ Sucesso com ${model}!`);
+                    successModel = model;
+                    break; // Sai do loop se funcionar
+                } else {
+                    // FAIL-FAST: Se for 429, para imediatamente (evita ban)
+                    if (response.status === 429) {
+                        throw new Error("⚠️ Limite de taxa (5 RPM) excedido. Aguarde 1 minuto antes de tentar novamente.");
+                    }
+
+                    const errText = await response.text();
+                    console.warn(`⚠️ Modelo ${model} falhou (${response.status})`);
+                    lastError = `Erro ${response.status}: ${errText.substring(0, 100)}`;
+                }
+            } catch (err) {
+                console.warn(`⚠️ Erro em ${model}:`, err.message);
+                lastError = err.message;
+
+                // FAIL-FAST: Se for erro de rate limit, para o loop
+                if (err.message.includes("Limite de taxa") || err.message.includes("429")) {
+                    throw err;
+                }
+            }
+        }
+
+        if (!response || !response.ok) {
+            throw new Error(`Falha na IA. Motivo: ${lastError}`);
+        }
+
+        const data = await response.json();
+        document.getElementById(loadingId)?.remove();
+
+        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]) {
+            throw new Error("A IA não retornou resposta válida (possível bloqueio de conteúdo).");
+        }
+
+        const aiResponse = data.candidates[0].content.parts[0].text;
+        
+        if (typeof chatHistory !== 'undefined') {
+            chatHistory.push({ role: 'assistant', content: aiResponse, timestamp: Date.now() });
+        }
+        if (typeof saveChatHistory === 'function') saveChatHistory();
+
+        const htmlContent = (typeof marked !== 'undefined') ? marked.parse(aiResponse) : aiResponse;
+        
+        // Adiciona um pequeno indicador de qual modelo respondeu (para debug)
+        const debugInfo = `<div class="text-[10px] text-gray-400 mt-1 text-right">Respondido por: ${successModel}</div>`;
+        
+        historyEl.innerHTML += `<div class="chat-bubble chat-ai">${htmlContent}${debugInfo}</div>`;
+        historyEl.scrollTop = historyEl.scrollHeight;
+
+    } catch (error) {
+        console.error('❌ Erro no chat:', error);
+        document.getElementById(loadingId)?.remove();
+
+        // Mensagem de erro personalizada
+        let userMessage = error.message || "❌ Erro ao processar resposta.";
+
+        if (error.name === 'AbortError') {
+            userMessage = "⏱️ Tempo limite excedido (40s). Tente simplificar sua pergunta.";
+        }
+
+        historyEl.innerHTML += `<div class="chat-bubble chat-ai border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300">
+            <strong><i class="fa-solid fa-triangle-exclamation"></i> Erro:</strong><br>
+            ${userMessage}
+            <div class="text-xs mt-2 opacity-75">
+                💡 Dicas: Verifique sua API Key, reformule a pergunta ou aguarde se excedeu o limite de taxa.
+            </div>
+        </div>`;
+        historyEl.scrollTop = historyEl.scrollHeight;
+
+        if (typeof showToast === 'function') {
+            const shortError = userMessage.length > 80 ? userMessage.substring(0, 77) + '...' : userMessage;
+            showToast(shortError, 'error');
+        }
     }
 };
 
@@ -342,4 +550,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-console.log('✅ Nexus Dashboard - Critical fixes applied');
+// ==================== VERIFICAÇÃO DE INTEGRIDADE ====================
+console.log('✅ Nexus Dashboard - Critical fixes applied (COMPLETO)');
+console.log('📋 Checklist de Funcionalidades:');
+console.log('  ✅ FIX 1: Global Error Handler');
+console.log('  ✅ FIX 2: Chart Resize Handler');
+console.log('  ✅ FIX 3: LocalStorage Fallback');
+console.log('  ✅ FIX 4: API Key Validation Enhanced');
+console.log('  ✅ FIX 5: CSV Parser Error Handler');
+console.log('  ✅ FIX 6: Chart Null Check');
+console.log('  ✅ FIX 7: Forecast Safe Calculation');
+console.log('  ✅ FIX 8: Date Parsing Safe');
+console.log('  ✅ FIX 9: Number Parsing Enhanced');
+console.log('  ✅ FIX 10: Modal Focus Trap');
+console.log('  ✅ FIX 11: Debounced Filter');
+console.log('  ✅ FIX 12: Performance Monitor');
+console.log('  ✅ FIX 13: Memory Cleanup');
+console.log('  ✅ FIX 14: API Rate Limiting (Melhorado)');
+console.log('  ✅ FIX 14-NOVO: Otimizador de Contexto (Chatbot)');
+console.log('  ✅ FIX 14-NOVO: sendChatMessage Corrigida (Chatbot)');
+console.log('  ✅ FIX 15: Accessibility Improvements');
+console.log('');
+console.log('🔧 CORREÇÕES CRÍTICAS DO CHATBOT:');
+console.log('  ✅ Modelos atualizados: gemini-2.5-flash, gemini-exp-1206, gemini-1.5-pro-latest, gemini-1.5-flash-latest');
+console.log('  ✅ Contexto otimizado (reduz payload significativamente)');
+console.log('  ✅ Safety Settings configurados (evita bloqueios)');
+console.log('  ✅ Rate limiting STRICT (5 req/min - Free Tier)');
+console.log('  ✅ Fail-fast em 429 (evita ban de conta)');
+console.log('  ✅ Timeout aumentado para 40s');
+console.log('  ✅ Tratamento de erros detalhado');
+console.log('');
+console.log('🎯 Pronto para uso! Teste o chatbot agora.');

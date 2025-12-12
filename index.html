@@ -824,15 +824,17 @@
             document.getElementById('template-modal').classList.remove('hidden');
         }
 
-        function closeTemplateModal() {
+        function closeTemplateModal(clearData = true) {
             document.getElementById('template-modal').classList.add('hidden');
-            pendingCSVData = null;
-            csvHeaders = [];
+            if (clearData) {
+                pendingCSVData = null;
+                csvHeaders = [];
+            }
         }
 
         function selectTemplate(templateKey) {
             currentTemplate = templateKey;
-            closeTemplateModal();
+            closeTemplateModal(false); // Não limpar dados ao selecionar template
             openMappingModal();
         }
 
@@ -877,28 +879,49 @@
                     }
                 }
 
-                const fieldHtml = `
-                    <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                        <div class="w-1/3">
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                ${field.label}
-                                ${field.required ? '<span class="text-red-500">*</span>' : ''}
-                            </label>
-                        </div>
-                        <div class="w-2/3">
-                            <select
-                                id="map-${field.key}"
-                                class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">-- Selecione a coluna --</option>
-                                ${csvHeaders.map(h => `
-                                    <option value="${h}" ${h === autoDetected ? 'selected' : ''}>${h}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
+                // Criar div do campo
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'flex items-center gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg';
+
+                // Criar label
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'w-1/3';
+                labelDiv.innerHTML = `
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        ${field.label}
+                        ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                    </label>
                 `;
-                mappingFields.innerHTML += fieldHtml;
+
+                // Criar select
+                const selectDiv = document.createElement('div');
+                selectDiv.className = 'w-2/3';
+
+                const select = document.createElement('select');
+                select.id = `map-${field.key}`;
+                select.className = 'w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500';
+
+                // Adicionar opção padrão
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Selecione a coluna --';
+                select.appendChild(defaultOption);
+
+                // Adicionar opções de colunas
+                csvHeaders.forEach(h => {
+                    const option = document.createElement('option');
+                    option.value = h;
+                    option.textContent = h;
+                    if (h === autoDetected) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+
+                selectDiv.appendChild(select);
+                fieldDiv.appendChild(labelDiv);
+                fieldDiv.appendChild(selectDiv);
+                mappingFields.appendChild(fieldDiv);
             });
 
             document.getElementById('mapping-modal').classList.remove('hidden');
@@ -1551,6 +1574,7 @@
                 };
 
                 const seen = new Set();
+                const hasIdColumn = map.id || rawData[0]?.id;
 
                 rawData.forEach((d, index) => {
                     const rowIndex = index + 1;
@@ -1621,8 +1645,11 @@
                     }
 
                     // 6. Validação de Duplicata (aviso)
-                    const key = `${normalized.date}-${normalized.product}-${normalized.value}`;
+                    const idValue = map.id ? d[map.id] : d.id;
+                    const key = hasIdColumn ? `id-${idValue}` : `${normalized.date}-${normalized.product}-${normalized.value}`;
+                    let isDuplicate = false;
                     if (seen.has(key)) {
+                        isDuplicate = true;
                         warnings.push(`Registro duplicado (mesma data, produto e valor)`);
                         result.duplicates.push({ rowIndex, original: d });
                     }
@@ -1631,6 +1658,8 @@
                     // 7. Classificação
                     if (errors.length > 0) {
                         result.invalid.push({ rowIndex, original: d, errors });
+                    } else if (isDuplicate) {
+                        result.warnings.push({ rowIndex, original: d, warnings });
                     } else {
                         result.valid.push(normalized);
                         if (warnings.length > 0) {
@@ -1656,7 +1685,8 @@
                     product: headers.find(h => /produto|product|item|mercadoria|nome|descrição|cliente|customer/i.test(h)) || null,
                     value: headers.find(h => /valor|value|total|price|preço|amount|venda|custo/i.test(h)) || null,
                     payment: headers.find(h => /pagamento|payment|pgto|forma|metodo/i.test(h)) || null,
-                    status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null
+                    status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null,
+                    id: headers.find(h => /^id$/i.test(h)) || null
                 };
             }
         }
