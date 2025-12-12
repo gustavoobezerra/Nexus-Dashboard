@@ -3,10 +3,6 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# A chave de API deve ser carregada de uma variável de ambiente
-# Isso é mais seguro do que embutir no código, mesmo no backend.
-# Para testes locais, você pode definir a variável de ambiente no terminal:
-# export GEMINI_API_KEY='AIzaSyCx7j-ViLMmzchjJcIh-3X5YTWx6rpsYxk'
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 if not GEMINI_API_KEY:
