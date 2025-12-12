@@ -32,9 +32,12 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- Biblioteca para manipulação de datas (melhoria de robustez) -->
     <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    
+
     <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Critical Fixes -->
+    <script src="fixes.js" defer></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -194,6 +197,134 @@
         </div>
     </div>
 
+    <!-- Template Selection Modal -->
+    <div id="template-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-[600px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold">Selecione o Tipo de Dados</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Escolha o template que melhor descreve seus dados</p>
+                </div>
+                <button onclick="closeTemplateModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6" id="template-options">
+                <!-- Vendas -->
+                <button onclick="selectTemplate('vendas')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-indigo-500 dark:hover:border-indigo-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Vendas</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Transações, produtos, categorias, pagamentos</p>
+                </button>
+
+                <!-- Estoque -->
+                <button onclick="selectTemplate('estoque')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Estoque</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Inventário, movimentações, entradas e saídas</p>
+                </button>
+
+                <!-- Finanças -->
+                <button onclick="selectTemplate('financas')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-green-500 dark:hover:border-green-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-green-600 dark:group-hover:text-green-400">Finanças</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Receitas, despesas, contas a pagar/receber</p>
+                </button>
+
+                <!-- Jurídico -->
+                <button onclick="selectTemplate('juridico')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-amber-500 dark:hover:border-amber-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-amber-600 dark:group-hover:text-amber-400">Jurídico</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Processos, contratos, prazos, honorários</p>
+                </button>
+
+                <!-- Educação -->
+                <button onclick="selectTemplate('educacao')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-purple-600 dark:text-purple-400">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-purple-600 dark:group-hover:text-purple-400">Educação</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Alunos, matrículas, notas, frequência</p>
+                </button>
+
+                <!-- Personalizado -->
+                <button onclick="selectTemplate('custom')" class="template-card p-4 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-slate-500 dark:hover:border-slate-400 transition-all text-left group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-400">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <h4 class="font-semibold group-hover:text-slate-600 dark:group-hover:text-slate-400">Personalizado</h4>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Configure manualmente suas colunas</p>
+                </button>
+            </div>
+
+            <div class="text-center">
+                <button onclick="closeTemplateModal()" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                    Cancelar importação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Mapping Modal -->
+    <div id="mapping-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-[700px] max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-xl font-bold">Mapeamento de Colunas</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="mapping-template-name">Template: Vendas</p>
+                </div>
+                <button onclick="closeMappingModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Preview dos dados -->
+            <div class="mb-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Preview dos seus dados (primeiras 3 linhas):</p>
+                <div class="overflow-x-auto">
+                    <table class="text-xs w-full" id="data-preview-table">
+                        <!-- Preenchido dinamicamente -->
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mapeamento -->
+            <div class="space-y-3" id="mapping-fields">
+                <!-- Preenchido dinamicamente baseado no template -->
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-slate-700">
+                <button onclick="closeMappingModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                    Voltar
+                </button>
+                <button onclick="applyMapping()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fa-solid fa-check mr-2"></i>Aplicar e Importar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Advanced Filters Modal -->
     <div id="filters-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto">
@@ -336,7 +467,14 @@
             <header class="h-auto md:h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between px-6 py-2 md:py-0 trans-all z-10 gap-2 print:hidden">
                 <div class="flex items-center gap-4">
                     <h2 id="page-title" class="text-lg font-bold text-gray-700 dark:text-gray-100 hidden md:block">Visão Geral</h2>
-                    
+
+                    <!-- Indicador de Template Atual -->
+                    <button onclick="showTemplateSelector()" id="current-template-badge" class="hidden md:flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors" title="Clique para trocar template">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span id="template-badge-text">Vendas</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] opacity-50"></i>
+                    </button>
+
                     <!-- FILTROS DE DATA -->
                     <div class="flex bg-gray-100 dark:bg-slate-800 rounded-lg p-1">
                         <button onclick="filterByDate(7)" id="btn-7d" class="filter-btn px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-700 shadow-sm">7 Dias</button>
@@ -578,6 +716,445 @@
             maxFileSizeMB: 50,
             forecastDays: 7
         };
+
+        // ==================== SISTEMA DE TEMPLATES ====================
+        let currentTemplate = 'vendas';
+        let pendingCSVData = null;
+        let csvHeaders = [];
+        let columnMapping = {};
+
+        // Definição dos templates disponíveis
+        const dataTemplates = {
+            vendas: {
+                name: 'Vendas',
+                icon: 'fa-cart-shopping',
+                color: 'indigo',
+                fields: [
+                    { key: 'date', label: 'Data', required: true, patterns: ['data', 'date', 'dt_venda', 'criado_em', 'time', 'data_venda'] },
+                    { key: 'category', label: 'Categoria', required: false, patterns: ['categoria', 'category', 'cat', 'setor', 'grupo'] },
+                    { key: 'product', label: 'Produto/Item', required: false, patterns: ['produto', 'product', 'item', 'mercadoria', 'nome', 'descrição'] },
+                    { key: 'value', label: 'Valor', required: true, patterns: ['valor', 'value', 'total', 'price', 'preço', 'amount', 'venda'] },
+                    { key: 'payment', label: 'Forma de Pagamento', required: false, patterns: ['pagamento', 'payment', 'pgto', 'forma', 'metodo'] },
+                    { key: 'status', label: 'Status', required: false, patterns: ['status', 'estado', 'situacao', 'situação'] }
+                ],
+                kpis: ['Receita Total', 'Volume de Vendas', 'Ticket Médio', 'Top Categoria'],
+                charts: ['line', 'bar', 'doughnut', 'payment']
+            },
+            estoque: {
+                name: 'Estoque',
+                icon: 'fa-boxes-stacked',
+                color: 'emerald',
+                fields: [
+                    { key: 'date', label: 'Data', required: true, patterns: ['data', 'date', 'dt_movimentacao', 'data_mov'] },
+                    { key: 'product', label: 'Produto', required: true, patterns: ['produto', 'product', 'item', 'sku', 'codigo'] },
+                    { key: 'category', label: 'Categoria', required: false, patterns: ['categoria', 'category', 'grupo', 'tipo'] },
+                    { key: 'value', label: 'Quantidade', required: true, patterns: ['quantidade', 'qtd', 'qty', 'quant', 'unidades'] },
+                    { key: 'payment', label: 'Tipo Movimentação', required: false, patterns: ['tipo', 'movimentacao', 'entrada', 'saida', 'operacao'] },
+                    { key: 'status', label: 'Armazém/Local', required: false, patterns: ['armazem', 'local', 'deposito', 'estoque', 'loja'] }
+                ],
+                kpis: ['Total Itens', 'Movimentações', 'Média Diária', 'Top Produto'],
+                charts: ['line', 'bar', 'doughnut', 'payment'],
+                valueLabel: 'Quantidade',
+                valuePrefix: ''
+            },
+            financas: {
+                name: 'Finanças',
+                icon: 'fa-wallet',
+                color: 'green',
+                fields: [
+                    { key: 'date', label: 'Data', required: true, patterns: ['data', 'date', 'vencimento', 'dt_lancamento', 'competencia'] },
+                    { key: 'category', label: 'Categoria/Centro de Custo', required: false, patterns: ['categoria', 'category', 'centro_custo', 'conta', 'tipo'] },
+                    { key: 'product', label: 'Descrição', required: false, patterns: ['descricao', 'description', 'historico', 'observacao', 'item'] },
+                    { key: 'value', label: 'Valor', required: true, patterns: ['valor', 'value', 'total', 'amount', 'montante'] },
+                    { key: 'payment', label: 'Tipo (Receita/Despesa)', required: false, patterns: ['tipo', 'natureza', 'receita', 'despesa', 'classificacao'] },
+                    { key: 'status', label: 'Status', required: false, patterns: ['status', 'situacao', 'pago', 'pendente', 'estado'] }
+                ],
+                kpis: ['Saldo Total', 'Receitas', 'Despesas', 'Balanço'],
+                charts: ['line', 'bar', 'doughnut', 'payment']
+            },
+            juridico: {
+                name: 'Jurídico',
+                icon: 'fa-scale-balanced',
+                color: 'amber',
+                fields: [
+                    { key: 'date', label: 'Data', required: true, patterns: ['data', 'date', 'dt_entrada', 'abertura', 'distribuicao'] },
+                    { key: 'category', label: 'Área/Tipo', required: false, patterns: ['area', 'tipo', 'materia', 'natureza', 'categoria'] },
+                    { key: 'product', label: 'Processo/Contrato', required: false, patterns: ['processo', 'contrato', 'numero', 'caso', 'cliente'] },
+                    { key: 'value', label: 'Valor da Causa/Honorário', required: true, patterns: ['valor', 'value', 'honorario', 'causa', 'montante'] },
+                    { key: 'payment', label: 'Fase/Instância', required: false, patterns: ['fase', 'instancia', 'etapa', 'andamento', 'tribunal'] },
+                    { key: 'status', label: 'Status', required: false, patterns: ['status', 'situacao', 'estado', 'resultado', 'conclusao'] }
+                ],
+                kpis: ['Valor em Causas', 'Total Processos', 'Média por Processo', 'Top Área'],
+                charts: ['line', 'bar', 'doughnut', 'payment']
+            },
+            educacao: {
+                name: 'Educação',
+                icon: 'fa-graduation-cap',
+                color: 'purple',
+                fields: [
+                    { key: 'date', label: 'Data', required: true, patterns: ['data', 'date', 'dt_matricula', 'periodo', 'semestre'] },
+                    { key: 'category', label: 'Curso/Turma', required: false, patterns: ['curso', 'turma', 'classe', 'serie', 'disciplina'] },
+                    { key: 'product', label: 'Aluno/Matrícula', required: false, patterns: ['aluno', 'estudante', 'matricula', 'nome', 'ra'] },
+                    { key: 'value', label: 'Nota/Valor', required: true, patterns: ['nota', 'valor', 'mensalidade', 'score', 'media', 'frequencia'] },
+                    { key: 'payment', label: 'Tipo (Avaliação/Pagamento)', required: false, patterns: ['tipo', 'avaliacao', 'prova', 'pagamento', 'forma'] },
+                    { key: 'status', label: 'Status', required: false, patterns: ['status', 'situacao', 'aprovado', 'reprovado', 'cursando'] }
+                ],
+                kpis: ['Total Alunos', 'Média Geral', 'Taxa Aprovação', 'Top Curso'],
+                charts: ['line', 'bar', 'doughnut', 'payment']
+            },
+            custom: {
+                name: 'Personalizado',
+                icon: 'fa-sliders',
+                color: 'slate',
+                fields: [
+                    { key: 'date', label: 'Data/Período', required: true, patterns: [] },
+                    { key: 'category', label: 'Agrupamento Principal', required: false, patterns: [] },
+                    { key: 'product', label: 'Item/Descrição', required: false, patterns: [] },
+                    { key: 'value', label: 'Valor Numérico', required: true, patterns: [] },
+                    { key: 'payment', label: 'Agrupamento Secundário', required: false, patterns: [] },
+                    { key: 'status', label: 'Status/Classificação', required: false, patterns: [] }
+                ],
+                kpis: ['Total', 'Quantidade', 'Média', 'Top Item'],
+                charts: ['line', 'bar', 'doughnut', 'payment']
+            }
+        };
+
+        // Funções do sistema de templates
+        function openTemplateModal() {
+            document.getElementById('template-modal').classList.remove('hidden');
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('template-modal').classList.add('hidden');
+            pendingCSVData = null;
+            csvHeaders = [];
+        }
+
+        function selectTemplate(templateKey) {
+            currentTemplate = templateKey;
+            closeTemplateModal();
+            openMappingModal();
+        }
+
+        function openMappingModal() {
+            const template = dataTemplates[currentTemplate];
+            document.getElementById('mapping-template-name').textContent = `Template: ${template.name}`;
+
+            // Preencher preview dos dados
+            const previewTable = document.getElementById('data-preview-table');
+            if (pendingCSVData && pendingCSVData.length > 0) {
+                const headers = csvHeaders;
+                const previewRows = pendingCSVData.slice(0, 3);
+
+                previewTable.innerHTML = `
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-slate-600">
+                            ${headers.map(h => `<th class="px-2 py-1 text-left font-medium text-gray-700 dark:text-gray-300">${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${previewRows.map(row => `
+                            <tr class="border-b border-gray-100 dark:border-slate-700">
+                                ${headers.map(h => `<td class="px-2 py-1 text-gray-600 dark:text-gray-400">${row[h] || '-'}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+            }
+
+            // Preencher campos de mapeamento
+            const mappingFields = document.getElementById('mapping-fields');
+            mappingFields.innerHTML = '';
+
+            template.fields.forEach(field => {
+                // Auto-detectar coluna baseado nos patterns
+                let autoDetected = '';
+                for (const header of csvHeaders) {
+                    const headerLower = header.toLowerCase();
+                    if (field.patterns.some(p => headerLower.includes(p.toLowerCase()))) {
+                        autoDetected = header;
+                        break;
+                    }
+                }
+
+                const fieldHtml = `
+                    <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                        <div class="w-1/3">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                ${field.label}
+                                ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                            </label>
+                        </div>
+                        <div class="w-2/3">
+                            <select
+                                id="map-${field.key}"
+                                class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="">-- Selecione a coluna --</option>
+                                ${csvHeaders.map(h => `
+                                    <option value="${h}" ${h === autoDetected ? 'selected' : ''}>${h}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+                mappingFields.innerHTML += fieldHtml;
+            });
+
+            document.getElementById('mapping-modal').classList.remove('hidden');
+        }
+
+        function closeMappingModal() {
+            document.getElementById('mapping-modal').classList.add('hidden');
+        }
+
+        function applyMapping() {
+            const template = dataTemplates[currentTemplate];
+            columnMapping = {};
+
+            // Coletar mapeamento
+            template.fields.forEach(field => {
+                const select = document.getElementById(`map-${field.key}`);
+                if (select && select.value) {
+                    columnMapping[field.key] = select.value;
+                }
+            });
+
+            // Validar campos obrigatórios
+            const missingRequired = template.fields
+                .filter(f => f.required && !columnMapping[f.key])
+                .map(f => f.label);
+
+            if (missingRequired.length > 0) {
+                showToast(`Campos obrigatórios: ${missingRequired.join(', ')}`, 'error');
+                return;
+            }
+
+            // Função auxiliar para normalizar datas
+            const parseDate = (dateStr) => {
+                if (!dateStr) return null;
+                const str = String(dateStr).trim();
+
+                // Tentar formato ISO primeiro
+                let dt = luxon.DateTime.fromISO(str);
+                if (dt.isValid) return dt.toISODate();
+
+                // Tentar formato brasileiro dd/MM/yyyy
+                dt = luxon.DateTime.fromFormat(str, 'dd/MM/yyyy');
+                if (dt.isValid) return dt.toISODate();
+
+                // Tentar formato dd-MM-yyyy
+                dt = luxon.DateTime.fromFormat(str, 'dd-MM-yyyy');
+                if (dt.isValid) return dt.toISODate();
+
+                // Tentar formato yyyy/MM/dd
+                dt = luxon.DateTime.fromFormat(str, 'yyyy/MM/dd');
+                if (dt.isValid) return dt.toISODate();
+
+                // Tentar formato MM/dd/yyyy (americano)
+                dt = luxon.DateTime.fromFormat(str, 'MM/dd/yyyy');
+                if (dt.isValid) return dt.toISODate();
+
+                return null;
+            };
+
+            // Função para normalizar valores numéricos
+            const parseValue = (val) => {
+                if (typeof val === 'number') return val;
+                if (!val) return 0;
+                // Remove R$, espaços, pontos de milhar e troca vírgula por ponto
+                const cleaned = String(val)
+                    .replace(/[R$\s]/g, '')
+                    .replace(/\./g, '')
+                    .replace(',', '.');
+                return parseFloat(cleaned) || 0;
+            };
+
+            // Transformar dados
+            const transformedData = pendingCSVData.map(row => ({
+                date: parseDate(row[columnMapping.date]) || '',
+                category: String(row[columnMapping.category] || 'Geral').trim(),
+                product: String(row[columnMapping.product] || 'Item').trim(),
+                value: parseValue(row[columnMapping.value]),
+                payment: String(row[columnMapping.payment] || 'Outros').trim(),
+                status: String(row[columnMapping.status] || 'Concluído').trim()
+            }));
+
+            // Validar os dados transformados
+            const validation = DatasetValidator.validate(transformedData, {
+                minValue: userConfig.minValue,
+                maxValue: userConfig.maxValue
+            });
+
+            closeMappingModal();
+
+            // Salvar template selecionado
+            localStorage.setItem('nexus_template', currentTemplate);
+            updateDashboardLabels();
+
+            if (validation.valid.length > 0) {
+                showValidationReport(validation);
+                processData(validation.valid);
+                showToast(`${validation.valid.length} registros importados!`, 'success');
+            } else {
+                showToast('Nenhum registro válido encontrado! Verifique o formato das datas e valores.', 'error');
+            }
+
+            pendingCSVData = null;
+            csvHeaders = [];
+        }
+
+        function updateDashboardLabels() {
+            const template = dataTemplates[currentTemplate];
+
+            // Atualizar títulos dos KPIs baseado no template
+            const kpiLabels = document.querySelectorAll('.card p.text-sm');
+            if (kpiLabels.length >= 4 && template.kpis) {
+                // Os labels dos KPIs são os primeiros 4 elementos com essa classe
+                const kpiElements = Array.from(kpiLabels).slice(0, 4);
+                kpiElements.forEach((el, i) => {
+                    if (template.kpis[i]) {
+                        el.textContent = template.kpis[i];
+                    }
+                });
+            }
+
+            // Atualizar ícone e cor do sidebar
+            const logoIcon = document.querySelector('aside .fa-layer-group, aside .fa-cart-shopping, aside .fa-boxes-stacked, aside .fa-wallet, aside .fa-scale-balanced, aside .fa-graduation-cap, aside .fa-sliders');
+            if (logoIcon && template.icon) {
+                logoIcon.className = `fa-solid ${template.icon} text-2xl`;
+            }
+
+            // Atualizar badge do template no header
+            const badge = document.getElementById('current-template-badge');
+            const badgeIcon = badge?.querySelector('i:first-child');
+            const badgeText = document.getElementById('template-badge-text');
+
+            if (badge && badgeIcon && badgeText) {
+                badgeIcon.className = `fa-solid ${template.icon}`;
+                badgeText.textContent = template.name;
+
+                // Atualizar cor do badge baseado no template
+                const colorClasses = {
+                    vendas: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50',
+                    estoque: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50',
+                    financas: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50',
+                    juridico: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50',
+                    educacao: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50',
+                    custom: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                };
+
+                // Remover cores anteriores e aplicar nova
+                badge.className = badge.className.replace(/bg-\w+-\d+|text-\w+-\d+|hover:bg-\w+-\d+|dark:bg-\w+-\d+\/\d+|dark:text-\w+-\d+|dark:hover:bg-\w+-\d+\/\d+/g, '').trim();
+                badge.className = `hidden md:flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-lg transition-colors ${colorClasses[currentTemplate] || colorClasses.vendas}`;
+            }
+        }
+
+        function showTemplateSelector() {
+            // Cria um modal rápido para trocar o template
+            const existingModal = document.getElementById('quick-template-modal');
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'quick-template-modal';
+            modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+            // Estilos pré-definidos para cada template (evita problemas com Tailwind JIT)
+            const templateStyles = {
+                vendas: {
+                    border: 'border-indigo-500',
+                    bg: 'bg-indigo-50 dark:bg-indigo-900/20',
+                    iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+                    iconColor: 'text-indigo-600 dark:text-indigo-400',
+                    hover: 'hover:border-indigo-500'
+                },
+                estoque: {
+                    border: 'border-emerald-500',
+                    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+                    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+                    iconColor: 'text-emerald-600 dark:text-emerald-400',
+                    hover: 'hover:border-emerald-500'
+                },
+                financas: {
+                    border: 'border-green-500',
+                    bg: 'bg-green-50 dark:bg-green-900/20',
+                    iconBg: 'bg-green-100 dark:bg-green-900/30',
+                    iconColor: 'text-green-600 dark:text-green-400',
+                    hover: 'hover:border-green-500'
+                },
+                juridico: {
+                    border: 'border-amber-500',
+                    bg: 'bg-amber-50 dark:bg-amber-900/20',
+                    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+                    iconColor: 'text-amber-600 dark:text-amber-400',
+                    hover: 'hover:border-amber-500'
+                },
+                educacao: {
+                    border: 'border-purple-500',
+                    bg: 'bg-purple-50 dark:bg-purple-900/20',
+                    iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+                    iconColor: 'text-purple-600 dark:text-purple-400',
+                    hover: 'hover:border-purple-500'
+                },
+                custom: {
+                    border: 'border-slate-500',
+                    bg: 'bg-slate-50 dark:bg-slate-800/50',
+                    iconBg: 'bg-slate-100 dark:bg-slate-800',
+                    iconColor: 'text-slate-600 dark:text-slate-400',
+                    hover: 'hover:border-slate-500'
+                }
+            };
+
+            const templateOptions = Object.entries(dataTemplates).map(([key, t]) => {
+                const isActive = key === currentTemplate;
+                const style = templateStyles[key] || templateStyles.custom;
+
+                const borderClass = isActive ? `${style.border} ${style.bg}` : 'border-gray-200 dark:border-slate-700';
+
+                return `
+                    <button onclick="changeTemplate('${key}')" class="p-3 border-2 ${borderClass} rounded-xl ${style.hover} transition-all text-left group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 ${style.iconBg} rounded-lg flex items-center justify-center ${style.iconColor}">
+                                <i class="fa-solid ${t.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm">${t.name}</h4>
+                                ${isActive ? '<p class="text-[10px] text-green-600 dark:text-green-400"><i class="fa-solid fa-check mr-1"></i>Ativo</p>' : ''}
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-[400px]" onclick="event.stopPropagation()">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Alterar Template</h3>
+                        <button onclick="document.getElementById('quick-template-modal').remove()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Selecione o tipo de dados que você está analisando:</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${templateOptions}
+                    </div>
+                    <p class="text-xs text-gray-400 mt-4 text-center">O template define os rótulos e métricas do dashboard</p>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function changeTemplate(templateKey) {
+            if (dataTemplates[templateKey]) {
+                currentTemplate = templateKey;
+                localStorage.setItem('nexus_template', templateKey);
+                updateDashboardLabels();
+                document.getElementById('quick-template-modal')?.remove();
+                showToast(`Template alterado para: ${dataTemplates[templateKey].name}`, 'success');
+            }
+        }
 
         // ==================== INDEXEDDB - PERSISTÊNCIA ====================
         const DB_NAME = 'NexusERP_DB';
@@ -919,6 +1496,7 @@
                     invalid: [],
                     warnings: [],
                     duplicates: [],
+                    outliers: [],
                     summary: { total: rawData.length, valid: 0, invalid: 0, warnings: 0, successRate: '0%' }
                 };
 
@@ -931,16 +1509,37 @@
                     
                     // 1. Normalização e Validação de Colunas
                     const dateStr = map.date ? d[map.date] : (d.data || d.date || d.Data);
-                    let date = luxon.DateTime.fromISO(dateStr);
-                    if (!date.isValid) {
-                        date = luxon.DateTime.fromFormat(dateStr, 'dd/MM/yyyy');
+                    let date = null;
+
+                    if (dateStr) {
+                        const str = String(dateStr).trim();
+
+                        // Tentar diversos formatos de data
+                        const formats = [
+                            null, // ISO format (handled by fromISO)
+                            'dd/MM/yyyy',
+                            'dd-MM-yyyy',
+                            'yyyy/MM/dd',
+                            'MM/dd/yyyy',
+                            'dd/MM/yy',
+                            'yyyy-MM-dd'
+                        ];
+
+                        for (const fmt of formats) {
+                            if (fmt === null) {
+                                date = luxon.DateTime.fromISO(str);
+                            } else {
+                                date = luxon.DateTime.fromFormat(str, fmt);
+                            }
+                            if (date.isValid) break;
+                        }
                     }
                     
                     const valueRaw = map.value ? d[map.value] : (d.valor || d.value || 0);
                     const value = parseFloat(valueRaw);
 
                     const normalized = {
-                        date: date.isValid ? date.toISODate() : null,
+                        date: (date && date.isValid) ? date.toISODate() : null,
                         category: map.category ? d[map.category] : (d.categoria || d.category || 'Geral'),
                         product: map.product ? d[map.product] : (d.produto || d.product || 'Item'),
                         value: isNaN(value) ? 0 : value,
@@ -1570,43 +2169,32 @@
                 return;
             }
 
-            showToast("Validando arquivo...", "info");
+            showToast("Lendo arquivo...", "info");
 
             Papa.parse(file, {
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-
-                    // Configuração de validação do usuário
-                    const validation = DatasetValidator.validate(results.data, {
-                        minValue: userConfig.minValue,
-                        maxValue: userConfig.maxValue
-                    });
-
-                    showValidationReport(validation);
-
-                    // Se tiver dados válidos, processar
-                    if (validation.valid.length > 0) {
-                        processData(validation.valid);
-                        showToast(
-                            `✅ ${validation.valid.length} registros importados com sucesso!`,
-                            "success"
-                        );
+                    if (!results.data || results.data.length === 0) {
+                        showToast("Arquivo vazio ou inválido!", "error");
+                        return;
                     }
 
-                    // Se tiver muitos erros, alertar
-                    if (validation.summary.invalid > validation.summary.valid) {
-                        showToast(
-                            `⚠️ ${validation.summary.invalid} registros rejeitados. Verifique o arquivo!`,
-                            "error"
-                        );
-                    }
+                    // Guardar dados para processamento após seleção de template
+                    pendingCSVData = results.data;
+                    csvHeaders = results.meta.fields || Object.keys(results.data[0]);
+
+                    // Abrir modal de seleção de template
+                    openTemplateModal();
                 },
                 error: function(err) {
                     showToast(`Erro ao processar CSV: ${err.message}`, "error");
                 }
             });
+
+            // Limpar input para permitir reimportação do mesmo arquivo
+            input.value = '';
         }
 
         async function processData(data) {
@@ -2056,7 +2644,7 @@
             historyEl.scrollTop = historyEl.scrollHeight;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,  {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -2185,6 +2773,13 @@
                 // Carrega configurações do usuário
                 await loadConfig();
 
+                // Carrega template salvo
+                const savedTemplate = localStorage.getItem('nexus_template');
+                if (savedTemplate && dataTemplates[savedTemplate]) {
+                    currentTemplate = savedTemplate;
+                    updateDashboardLabels();
+                }
+
                 // Carrega histórico do chat
                 const savedChat = await loadChatHistory();
                 if (savedChat && savedChat.length > 0) {
@@ -2291,8 +2886,19 @@
             document.getElementById('settings-modal').classList.add('hidden');
             document.getElementById('export-modal').classList.add('hidden');
             document.getElementById('filters-modal').classList.add('hidden');
+            document.getElementById('template-modal').classList.add('hidden');
+            document.getElementById('mapping-modal').classList.add('hidden');
+
+            // Remover modais dinâmicos
             const validationReport = document.getElementById('validation-report');
             if (validationReport) validationReport.remove();
+
+            const quickTemplateModal = document.getElementById('quick-template-modal');
+            if (quickTemplateModal) quickTemplateModal.remove();
+
+            const shortcutsModal = document.getElementById('shortcuts-modal');
+            if (shortcutsModal) shortcutsModal.remove();
+
             // Fecha o chat se estiver aberto
             const chatPanel = document.getElementById('ai-chat-panel');
             if (!chatPanel.classList.contains('translate-x-full')) {
