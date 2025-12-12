@@ -53,12 +53,13 @@ const SafeStorage = {
     }
 };
 
-// ==================== FIX 4: API Key Validation Enhanced ====================
+// ==================== FIX 4: API Key (VIA PROXY) ====================
+// A chave de API agora é gerenciada pelo servidor proxy (Flask) para maior segurança.
+// O frontend não precisa mais da chave.
+const GEMINI_API_KEY = null; // Chave removida do frontend
+
 function validateApiKeySync() {
-    const key = localStorage.getItem('geminiApiKey');
-    if (!key || key === 'SUA_CHAVE_AQUI' || key.length < 30) {
-        return false;
-    }
+    // Retorna true, pois a chave será gerenciada pelo proxy
     return true;
 }
 
@@ -355,16 +356,11 @@ window.sendChatMessage = async function(ctx = null) {
     if (!input || !historyEl) return;
 
     const text = input.value.trim();
-    const apiKey = localStorage.getItem('geminiApiKey');
+    const apiKey = null; // Chave gerenciada pelo proxy
     
     if (!text && !ctx) return;
     
-    if (!apiKey || apiKey === 'SUA_CHAVE_AQUI' || apiKey.length < 30) {
-        if (typeof showToast === 'function') {
-            showToast("Configure sua API Key nas configurações!", "error");
-        }
-        return;
-    }
+    // Validação de API Key removida, pois a chave está no proxy.
 
     // 1. Verificação de Rate Limit (Proteção contra RPM 5)
     try {
@@ -412,7 +408,7 @@ window.sendChatMessage = async function(ctx = null) {
                 const timeoutId = setTimeout(() => controller.abort(), 40000);
 
                 response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                    `http://localhost:5000/api/gemini-proxy`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

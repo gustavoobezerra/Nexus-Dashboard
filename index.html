@@ -88,20 +88,8 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- API Key Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-96 transform scale-95 transition-transform" id="api-modal-content">
-            <h3 class="text-xl font-bold mb-2">Configurar IA</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Insira sua chave do Google Gemini para ativar o consultor inteligente.</p>
-            <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mb-4 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" aria-label="Chave da API Gemini" autocomplete="off">
-            <div id="api-key-status" class="text-xs mb-4 hidden"></div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeApiModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">Cancelar</button>
-                <button onclick="saveApiKey()" id="save-api-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Salvar</button>
-            </div>
-            <p class="text-xs text-center mt-4 text-gray-400">A chave fica salva apenas no seu navegador.</p>
-        </div>
-    </div>
+    <!-- API Key Modal (REMOVIDO) -->
+
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
@@ -3126,7 +3114,7 @@
         }
 
         function closeAllModals() {
-            document.getElementById('api-modal').classList.add('hidden');
+            // document.getElementById('api-modal').classList.add('hidden'); // Removido o modal de API Key
             document.getElementById('settings-modal').classList.add('hidden');
             document.getElementById('export-modal').classList.add('hidden');
             document.getElementById('filters-modal').classList.add('hidden');
