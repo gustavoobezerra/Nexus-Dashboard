@@ -93,7 +93,7 @@
         <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl w-96 transform scale-95 transition-transform" id="api-modal-content">
             <h3 class="text-xl font-bold mb-2">Configurar IA</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Insira sua chave do Google Gemini para ativar o consultor inteligente.</p>
-            <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mb-4 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            <input type="password" id="api-key-input" placeholder="Cole sua chave AIza..." class="w-full p-3 border border-gray-300 dark:border-slate-700 rounded-lg mb-4 bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" aria-label="Chave da API Gemini" autocomplete="off">
             <div id="api-key-status" class="text-xs mb-4 hidden"></div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeApiModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">Cancelar</button>
@@ -513,7 +513,7 @@
 
                     <!-- Data Load -->
                     <div class="relative flex gap-2">
-                        <input type="file" id="csv-file-input" accept=".csv" onchange="handleFileUpload(this)" class="hidden">
+                        <input type="file" id="csv-file-input" accept=".csv" onchange="handleFileUpload(this)" class="hidden" aria-label="Selecionar arquivo CSV">
                         <button onclick="document.getElementById('csv-file-input').click()" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 trans-all">
                             <i class="fa-solid fa-file-csv mr-1"></i> CSV
                         </button>
@@ -686,7 +686,7 @@
             </div>
             <div class="p-4 border-t border-gray-200 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <input type="text" id="chat-input" placeholder="Pergunte sobre seus dados..." class="flex-1 p-3 border border-gray-300 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="text" id="chat-input" placeholder="Pergunte sobre seus dados..." class="flex-1 p-3 border border-gray-300 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" aria-label="Campo de mensagem do chat" autocomplete="off">
                     <button onclick="sendChatMessage()" class="w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
@@ -1195,21 +1195,63 @@
         async function saveDataToDB(data) {
             if (!db) await openDatabase();
 
+            if (!data || data.length === 0) {
+                console.warn('Tentativa de salvar dados vazios no IndexedDB');
+                return;
+            }
+
             return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['salesData'], 'readwrite');
-                const store = transaction.objectStore('salesData');
+                try {
+                    const transaction = db.transaction(['salesData'], 'readwrite');
+                    const store = transaction.objectStore('salesData');
 
-                // Limpa dados antigos
-                store.clear();
+                    // Limpa dados antigos
+                    const clearRequest = store.clear();
 
-                // Salva novos dados
-                data.forEach(item => store.add(item));
+                    clearRequest.onsuccess = () => {
+                        // Salva novos dados em lotes para melhor performance
+                        let count = 0;
+                        const batchSize = 100;
 
-                transaction.oncomplete = () => {
-                    showToast('Dados salvos automaticamente!', 'success');
-                    resolve();
-                };
-                transaction.onerror = () => reject(transaction.error);
+                        const addBatch = (startIndex) => {
+                            const endIndex = Math.min(startIndex + batchSize, data.length);
+                            for (let i = startIndex; i < endIndex; i++) {
+                                store.add(data[i]);
+                                count++;
+                            }
+
+                            if (endIndex < data.length) {
+                                // Continua com próximo lote
+                                setTimeout(() => addBatch(endIndex), 0);
+                            }
+                        };
+
+                        addBatch(0);
+                    };
+
+                    clearRequest.onerror = () => {
+                        console.error('Erro ao limpar dados:', clearRequest.error);
+                        reject(clearRequest.error);
+                    };
+
+                    transaction.oncomplete = () => {
+                        showToast('Dados salvos automaticamente!', 'success');
+                        resolve();
+                    };
+
+                    transaction.onerror = () => {
+                        console.error('Erro na transação:', transaction.error);
+                        reject(transaction.error);
+                    };
+
+                    transaction.onabort = () => {
+                        console.error('Transação abortada');
+                        reject(new Error('Transação abortada'));
+                    };
+                } catch (error) {
+                    console.error('Erro ao salvar dados:', error);
+                    reject(error);
+                }
             });
         }
 
@@ -1470,12 +1512,20 @@
 
         // ==================== VALIDAÇÃO DE API KEY ====================
         async function validateApiKey(key) {
-            if (!key || key === 'SUA_CHAVE_AQUI') return false;
+            if (!key || key === 'SUA_CHAVE_AQUI' || key.length < 30) return false;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
                 return response.ok;
-            } catch {
+            } catch (error) {
+                console.error('Erro ao validar API key:', error);
                 return false;
             }
         }
@@ -1638,15 +1688,19 @@
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
+            if (!container) return;
+
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            
+
             let icon = '';
             if (type === 'success') icon = '<i class="fa-solid fa-circle-check text-green-500"></i>';
             else if (type === 'error') icon = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
             else icon = '<i class="fa-solid fa-circle-info text-blue-500"></i>';
 
-            toast.innerHTML = `${icon} <span class="text-sm">${message}</span>`;
+            // Sanitize message to prevent XSS
+            const sanitizedMessage = String(message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            toast.innerHTML = `${icon} <span class="text-sm">${sanitizedMessage}</span>`;
             container.appendChild(toast);
 
             setTimeout(() => {
@@ -1660,46 +1714,75 @@
         }
 
         function openApiModal() {
-            document.getElementById('api-key-input').value = apiKey === 'SUA_CHAVE_AQUI' ? '' : apiKey;
-            document.getElementById('api-modal').classList.remove('hidden');
+            const input = document.getElementById('api-key-input');
+            if (input) {
+                input.value = apiKey === 'SUA_CHAVE_AQUI' ? '' : apiKey;
+            }
+            const modal = document.getElementById('api-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
         }
 
         function closeApiModal() {
-            document.getElementById('api-modal').classList.add('hidden');
+            const modal = document.getElementById('api-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
         }
 
         async function saveApiKey() {
             const input = document.getElementById('api-key-input');
             const btn = document.getElementById('save-api-btn');
             const status = document.getElementById('api-key-status');
+
+            if (!input || !btn || !status) {
+                showToast("Erro ao acessar elementos do modal", "error");
+                return;
+            }
+
             const newKey = input.value.trim();
 
             if (newKey) {
+                // Validação básica de formato
+                if (newKey.length < 30 || !/^[A-Za-z0-9_-]+$/.test(newKey)) {
+                    showToast("Formato de chave inválido", "error");
+                    return;
+                }
+
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Validando...';
                 status.classList.remove('hidden', 'text-green-600', 'text-red-600');
                 status.classList.add('text-gray-500');
                 status.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Verificando chave...';
 
-                const isValid = await validateApiKey(newKey);
+                try {
+                    const isValid = await validateApiKey(newKey);
 
-                if (isValid) {
-                    apiKey = newKey;
-                    localStorage.setItem('geminiApiKey', newKey);
-                    status.classList.remove('text-gray-500');
-                    status.classList.add('text-green-600');
-                    status.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Chave válida!';
-                    showToast("Chave API validada e salva!", "success");
-                    setTimeout(() => closeApiModal(), 1000);
-                } else {
+                    if (isValid) {
+                        apiKey = newKey;
+                        localStorage.setItem('geminiApiKey', newKey);
+                        status.classList.remove('text-gray-500');
+                        status.classList.add('text-green-600');
+                        status.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Chave válida!';
+                        showToast("Chave API validada e salva!", "success");
+                        setTimeout(() => closeApiModal(), 1000);
+                    } else {
+                        status.classList.remove('text-gray-500');
+                        status.classList.add('text-red-600');
+                        status.innerHTML = '<i class="fa-solid fa-times-circle mr-1"></i> Chave inválida. Verifique e tente novamente.';
+                        showToast("Chave API inválida!", "error");
+                    }
+                } catch (error) {
+                    console.error('Erro ao validar chave:', error);
                     status.classList.remove('text-gray-500');
                     status.classList.add('text-red-600');
-                    status.innerHTML = '<i class="fa-solid fa-times-circle mr-1"></i> Chave inválida. Verifique e tente novamente.';
-                    showToast("Chave API inválida!", "error");
+                    status.innerHTML = '<i class="fa-solid fa-times-circle mr-1"></i> Erro de conexão.';
+                    showToast("Erro ao validar chave. Verifique sua conexão.", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Salvar';
                 }
-
-                btn.disabled = false;
-                btn.innerHTML = 'Salvar';
             } else {
                 apiKey = 'SUA_CHAVE_AQUI';
                 localStorage.removeItem('geminiApiKey');
@@ -1722,18 +1805,49 @@
         }
 
         async function saveSettings() {
-            userConfig.minValue = parseFloat(document.getElementById('config-min-value').value) || 0.01;
-            userConfig.maxValue = parseFloat(document.getElementById('config-max-value').value) || 10000000;
-            userConfig.maxFileSizeMB = parseInt(document.getElementById('config-max-file').value) || 50;
-            userConfig.forecastDays = parseInt(document.getElementById('config-forecast-days').value) || 7;
+            try {
+                const minValue = parseFloat(document.getElementById('config-min-value').value);
+                const maxValue = parseFloat(document.getElementById('config-max-value').value);
+                const maxFile = parseInt(document.getElementById('config-max-file').value);
+                const forecastDays = parseInt(document.getElementById('config-forecast-days').value);
 
-            await saveConfig();
-            showToast('Configurações salvas!', 'success');
-            closeSettingsModal();
+                // Validações
+                if (isNaN(minValue) || minValue < 0) {
+                    showToast('Valor mínimo inválido', 'error');
+                    return;
+                }
 
-            // Atualiza previsão se estiver na view
-            if (currentView === 'forecast') {
-                updateForecastView('general');
+                if (isNaN(maxValue) || maxValue <= minValue) {
+                    showToast('Valor máximo deve ser maior que o mínimo', 'error');
+                    return;
+                }
+
+                if (isNaN(maxFile) || maxFile < 1 || maxFile > 100) {
+                    showToast('Tamanho de arquivo deve estar entre 1 e 100 MB', 'error');
+                    return;
+                }
+
+                if (isNaN(forecastDays) || forecastDays < 1 || forecastDays > 90) {
+                    showToast('Dias de previsão deve estar entre 1 e 90', 'error');
+                    return;
+                }
+
+                userConfig.minValue = minValue;
+                userConfig.maxValue = maxValue;
+                userConfig.maxFileSizeMB = maxFile;
+                userConfig.forecastDays = forecastDays;
+
+                await saveConfig();
+                showToast('Configurações salvas!', 'success');
+                closeSettingsModal();
+
+                // Atualiza previsão se estiver na view
+                if (currentView === 'forecast') {
+                    updateForecastView('general');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar configurações:', error);
+                showToast('Erro ao salvar configurações', 'error');
             }
         }
 
@@ -2158,13 +2272,34 @@
         }
 
         function handleFileUpload(input) {
+            if (!input || !input.files || !input.files[0]) {
+                showToast("Nenhum arquivo selecionado", "error");
+                return;
+            }
+
             const file = input.files[0];
-            if (!file) return;
+
+            // Validar tipo de arquivo
+            const allowedTypes = ['text/csv', 'application/vnd.ms-excel', 'text/plain'];
+            const fileName = file.name.toLowerCase();
+
+            if (!allowedTypes.includes(file.type) && !fileName.endsWith('.csv')) {
+                showToast('Formato inválido! Use apenas arquivos .CSV', 'error');
+                input.value = '';
+                return;
+            }
 
             // Validar tamanho do arquivo
             const fileSizeMB = file.size / (1024 * 1024);
             if (fileSizeMB > userConfig.maxFileSizeMB) {
                 showToast(`Arquivo muito grande! Máximo: ${userConfig.maxFileSizeMB}MB. Seu arquivo: ${fileSizeMB.toFixed(1)}MB`, "error");
+                input.value = '';
+                return;
+            }
+
+            // Validar tamanho mínimo (evitar arquivos vazios)
+            if (file.size < 10) {
+                showToast("Arquivo vazio ou corrompido", "error");
                 input.value = '';
                 return;
             }
@@ -2175,21 +2310,36 @@
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
+                preview: 10000, // Limitar preview para evitar sobrecarga
                 complete: function(results) {
                     if (!results.data || results.data.length === 0) {
                         showToast("Arquivo vazio ou inválido!", "error");
                         return;
                     }
 
+                    // Validar número máximo de linhas
+                    if (results.data.length > 50000) {
+                        showToast("Arquivo muito grande! Máximo de 50.000 linhas permitido.", "error");
+                        return;
+                    }
+
+                    // Validar se há headers
+                    const headers = results.meta.fields || Object.keys(results.data[0] || {});
+                    if (headers.length === 0) {
+                        showToast("CSV sem cabeçalhos válidos!", "error");
+                        return;
+                    }
+
                     // Guardar dados para processamento após seleção de template
                     pendingCSVData = results.data;
-                    csvHeaders = results.meta.fields || Object.keys(results.data[0]);
+                    csvHeaders = headers;
 
                     // Abrir modal de seleção de template
                     openTemplateModal();
                 },
                 error: function(err) {
-                    showToast(`Erro ao processar CSV: ${err.message}`, "error");
+                    console.error('Erro ao processar CSV:', err);
+                    showToast(`Erro ao processar CSV: ${err.message || 'Formato inválido'}`, "error");
                 }
             });
 
@@ -2383,11 +2533,27 @@
         }
 
         function initChart(id, type, data, options) {
-            const canvas = document.getElementById(id); 
-            if(!canvas) return;
-            if(charts[id]) charts[id].destroy();
-            
+            const canvas = document.getElementById(id);
+            if(!canvas) {
+                console.warn(`Canvas #${id} não encontrado`);
+                return null;
+            }
+
+            // Destroy existing chart safely
+            if(charts[id]) {
+                try {
+                    charts[id].destroy();
+                    charts[id] = null;
+                } catch (error) {
+                    console.error(`Erro ao destruir gráfico ${id}:`, error);
+                }
+            }
+
             const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                console.error(`Não foi possível obter contexto 2D para ${id}`);
+                return null;
+            }
             
             // Merge common options with specific options
             const commonOptions = { 
@@ -2591,13 +2757,26 @@
 
         function renderChatHistory() {
             const historyEl = document.getElementById('chat-history');
+            if (!historyEl) return;
+
             historyEl.innerHTML = '<div class="chat-bubble chat-ai">Olá! Sou o seu assistente de BI. Carregue seus dados e me pergunte sobre tendências, anomalias ou previsões.</div>';
 
             chatHistory.forEach(msg => {
+                if (!msg || !msg.role || !msg.content) return;
+
                 if (msg.role === 'user') {
-                    historyEl.innerHTML += `<div class="chat-bubble chat-user">${msg.content}</div>`;
+                    // Sanitize user content
+                    const sanitizedContent = String(msg.content).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    historyEl.innerHTML += `<div class="chat-bubble chat-user">${sanitizedContent}</div>`;
                 } else {
-                    historyEl.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(msg.content)}</div>`;
+                    // AI responses are already processed by marked
+                    try {
+                        historyEl.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(msg.content)}</div>`;
+                    } catch (error) {
+                        console.error('Erro ao renderizar markdown:', error);
+                        const sanitizedContent = String(msg.content).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        historyEl.innerHTML += `<div class="chat-bubble chat-ai">${sanitizedContent}</div>`;
+                    }
                 }
             });
             historyEl.scrollTop = historyEl.scrollHeight;
@@ -2626,16 +2805,24 @@
 
         async function sendChatMessage(ctx = null) {
             const input = document.getElementById('chat-input');
+            const historyEl = document.getElementById('chat-history');
+
+            if (!input || !historyEl) {
+                showToast("Erro ao acessar elementos do chat", "error");
+                return;
+            }
+
             const text = input.value.trim();
 
             if(!text && !ctx) return;
             if(apiKey === 'SUA_CHAVE_AQUI') return showToast("Configure sua API Key primeiro!", "error");
 
-            const historyEl = document.getElementById('chat-history');
+            // Sanitize user input to prevent XSS
+            const sanitizedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             // Adiciona mensagem do usuário ao histórico
             chatHistory.push({ role: 'user', content: text, timestamp: Date.now() });
-            historyEl.innerHTML += `<div class="chat-bubble chat-user">${text}</div>`;
+            historyEl.innerHTML += `<div class="chat-bubble chat-user">${sanitizedText}</div>`;
             input.value = '';
             historyEl.scrollTop = historyEl.scrollHeight;
 
@@ -2644,7 +2831,10 @@
             historyEl.scrollTop = historyEl.scrollHeight;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,  {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,  {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -2653,13 +2843,28 @@
                                 text: `Você é um Analista de ERP. Seu objetivo é fornecer insights rápidos e práticos para um empresário. O contexto dos dados é: ${JSON.stringify(ctx || stats)}. A pergunta do usuário é: "${text}". Responda de forma concisa em português do Brasil, usando Markdown.`
                             }]
                         }]
-                    })
+                    }),
+                    signal: controller.signal
                 });
 
-                if(!response.ok) throw new Error("API Error");
+                clearTimeout(timeoutId);
+
+                if(!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
+                }
+
                 const data = await response.json();
 
-                document.getElementById(loadingId).remove();
+                const loadingElement = document.getElementById(loadingId);
+                if (loadingElement) {
+                    loadingElement.remove();
+                }
+
+                // Validação da resposta da API
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+                    throw new Error("Resposta da API inválida");
+                }
 
                 // Usando marked para renderizar o Markdown da resposta da IA
                 const aiResponse = data.candidates[0].content.parts[0].text;
@@ -2671,8 +2876,17 @@
                 historyEl.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(aiResponse)}</div>`;
                 historyEl.scrollTop = historyEl.scrollHeight;
             } catch(e) {
-                document.getElementById(loadingId).innerText = "Erro: Verifique sua Chave API ou a conexão.";
-                showToast("Erro na comunicação com a API do Gemini.", "error");
+                console.error('Erro na API do Gemini:', e);
+                const loadingElement = document.getElementById(loadingId);
+                if (loadingElement) {
+                    loadingElement.innerText = "Erro: Verifique sua Chave API ou a conexão.";
+                }
+
+                if (e.name === 'AbortError') {
+                    showToast("Tempo limite excedido. Tente novamente.", "error");
+                } else {
+                    showToast("Erro na comunicação com a API do Gemini.", "error");
+                }
             }
         }
 
