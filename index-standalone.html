@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Dashboard v4.0 - Standalone</title>
+
+    <!-- CSS do index.html original -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        canvas {
+            max-height: 400px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Nexus Dashboard v4.0 - Standalone</h1>
+
+        <div class="alert alert-info">
+            ℹ️ <strong>Modo Standalone:</strong> Dashboard completo funcionando sem backend Python!
+            A funcionalidade de IA está desabilitada nesta versão.
+        </div>
+
+        <div class="upload-section" onclick="document.getElementById('csvFile').click()">
+            <h2>📂 Carregar Arquivo CSV</h2>
+            <p>Clique aqui ou arraste um arquivo CSV</p>
+            <input type="file" id="csvFile" accept=".csv" style="display: none;">
+        </div>
+
+        <div id="statsSection" style="display: none;">
+            <h2>📈 Estatísticas Gerais</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <div class="chart-container">
+                <h3>Evolução ao Longo do Tempo</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3>Distribuição por Categoria</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Papa Parse (CSV) -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <script>
+        let currentData = [];
+
+        // Upload de arquivo
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        currentData = results.data.filter(row => row.value);
+                        processData();
+                    },
+                    error: function(error) {
+                        alert('Erro ao ler CSV: ' + error.message);
+                    }
+                });
+            }
+        });
+
+        function processData() {
+            if (currentData.length === 0) {
+                alert('Nenhum dado válido encontrado!');
+                return;
+            }
+
+            // Mostrar seção de stats
+            document.getElementById('statsSection').style.display = 'block';
+
+            // Calcular estatísticas
+            const stats = calculateStats();
+            displayStats(stats);
+            renderCharts(stats);
+        }
+
+        function calculateStats() {
+            const values = currentData.map(d => parseFloat(d.value) || 0);
+            const total = values.reduce((a, b) => a + b, 0);
+            const avg = total / values.length;
+            const max = Math.max(...values);
+            const min = Math.min(...values);
+
+            // Agrupar por categoria
+            const byCategory = {};
+            currentData.forEach(row => {
+                const cat = row.category || 'Sem categoria';
+                if (!byCategory[cat]) byCategory[cat] = 0;
+                byCategory[cat] += parseFloat(row.value) || 0;
+            });
+
+            // Agrupar por data
+            const byDate = {};
+            currentData.forEach(row => {
+                const date = row.date || 'Sem data';
+                if (!byDate[date]) byDate[date] = 0;
+                byDate[date] += parseFloat(row.value) || 0;
+            });
+
+            return {
+                total,
+                avg,
+                max,
+                min,
+                count: currentData.length,
+                byCategory,
+                byDate
+            };
+        }
+
+        function displayStats(stats) {
+            const html = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Geral</div>
+                    <div class="stat-value">R$ ${stats.total.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Média</div>
+                    <div class="stat-value">R$ ${stats.avg.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Maior Valor</div>
+                    <div class="stat-value">R$ ${stats.max.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total de Registros</div>
+                    <div class="stat-value">${stats.count}</div>
+                </div>
+            `;
+            document.getElementById('statsGrid').innerHTML = html;
+        }
+
+        function renderCharts(stats) {
+            // Gráfico de linha
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(stats.byDate),
+                    datasets: [{
+                        label: 'Valor por Data',
+                        data: Object.values(stats.byDate),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Gráfico de pizza
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(stats.byCategory),
+                    datasets: [{
+                        data: Object.values(stats.byCategory),
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#4facfe',
+                            '#43e97b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    </script>
+</body>
+</html>
