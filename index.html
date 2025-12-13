@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus ERP Analytics</title>
+    <meta name="description" content="Nexus ERP Analytics - Dashboard de Business Intelligence para análise de vendas, previsões e insights com IA">
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)">
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%236366f1' rx='15' width='100' height='100'/%3E%3Cpath fill='white' d='M25 30h50v10H25zM25 45h35v10H25zM25 60h45v10H25z'/%3E%3C/svg%3E">
+    <title>Nexus ERP Analytics - Dashboard de BI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -36,50 +41,247 @@
     <!-- Ícones -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Critical Fixes -->
-    <script src="fixes.js" defer></script>
+    <!-- Nexus Unified - All fixes, enhancements and patches in one optimized file -->
+    <script src="nexus-unified.js" defer></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
+        /* Base */
         body { font-family: 'Inter', sans-serif; }
         .trans-all { transition: all 0.3s ease-in-out; }
-        
-        /* Custom Scrollbar */
+
+        /* Custom Scrollbar Melhorado */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #94a3b8, #64748b); background-clip: padding-box; }
+        .dark ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #475569, #334155); background-clip: padding-box; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-        /* Chat Styles */
-        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; line-height: 1.5; }
-        .chat-user { background-color: #4f46e5; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .chat-ai { background-color: #f1f5f9; border: 1px solid #e2e8f0; color: #334155; align-self: flex-start; border-bottom-left-radius: 2px; }
+        /* Chat Styles Melhorados */
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: bubble-slide 0.3s ease-out;
+        }
+        .chat-user {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
+        }
+        .chat-ai {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
         .dark .chat-ai { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
         .dark .chat-ai strong { color: #818cf8; }
+        @keyframes bubble-slide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Toast Notification */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; }
-        .toast { min-width: 300px; padding: 16px; border-radius: 8px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: translateX(120%); transition: transform 0.3s ease-out; display: flex; align-items: center; gap: 12px; border-left: 4px solid; }
+        /* Toast Notification Melhorado */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 320px;
+            max-width: 400px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid;
+            backdrop-filter: blur(10px);
+        }
         .toast.show { transform: translateX(0); }
-        .toast-success { border-color: #10b981; }
-        .toast-error { border-color: #ef4444; }
-        .toast-info { border-color: #3b82f6; }
-        .dark .toast { background: #1e293b; color: white; }
+        .toast-success { border-color: #10b981; background: linear-gradient(to right, rgba(16, 185, 129, 0.1), transparent); }
+        .toast-error { border-color: #ef4444; background: linear-gradient(to right, rgba(239, 68, 68, 0.1), transparent); }
+        .toast-info { border-color: #3b82f6; background: linear-gradient(to right, rgba(59, 130, 246, 0.1), transparent); }
+        .toast-warning { border-color: #f59e0b; background: linear-gradient(to right, rgba(245, 158, 11, 0.1), transparent); }
+        .dark .toast { background: rgba(30, 41, 59, 0.95); color: white; backdrop-filter: blur(10px); }
 
-        /* Animation */
+        /* Animações */
         @keyframes shine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
         .btn-shine { background: linear-gradient(to right, #4f46e5 20%, #818cf8 40%, #818cf8 60%, #4f46e5 80%); background-size: 200% auto; animation: shine 4s linear infinite; }
 
-        /* Print CSS - O Mágico do PDF */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 50% { box-shadow: 0 0 20px 5px rgba(99, 102, 241, 0.2); } }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+        @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animate-gradient { background-size: 200% 200%; animation: gradient-x 3s ease infinite; }
+
+        /* Cards Melhorados */
+        .card {
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .card:hover::before { opacity: 1; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.15); }
+        .dark .card:hover { box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.4); }
+
+        /* KPI Cards */
+        .kpi-value {
+            background: linear-gradient(135deg, currentColor, currentColor);
+            -webkit-background-clip: text;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Botões Melhorados */
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        /* Nav Items */
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            border-radius: 0 2px 2px 0;
+            transition: height 0.2s ease;
+        }
+        .nav-item:hover::after, .nav-item.active-nav::after { height: 60%; }
+
+        /* Active Nav State */
+        .active-nav {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)) !important;
+            color: #6366f1 !important;
+        }
+        .dark .active-nav {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1)) !important;
+            color: #818cf8 !important;
+        }
+
+        /* Modal Animations */
+        [id$="-modal"] { animation: modal-backdrop 0.2s ease-out; }
+        @keyframes modal-backdrop { from { opacity: 0; } to { opacity: 1; } }
+        [id$="-modal"] > div { animation: modal-content 0.3s ease-out; }
+        @keyframes modal-content { from { opacity: 0; transform: scale(0.95) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            min-height: 200px;
+        }
+        .chart-container canvas {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Tables */
+        tbody tr {
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+        tbody tr:hover {
+            transform: scale(1.005);
+        }
+
+        /* Badge Pulse */
+        .badge-pulse {
+            position: relative;
+        }
+        .badge-pulse::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            animation: badge-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+            background: currentColor;
+            opacity: 0.3;
+        }
+        @keyframes badge-ping { 0% { transform: scale(1); opacity: 0.3; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        /* Loading States */
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* Focus States Melhorados */
+        *:focus-visible {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+        }
+        .dark *:focus-visible {
+            outline-color: #818cf8;
+        }
+
+        /* Print CSS */
         @media print {
-            aside, header, #ai-chat-panel, .no-print { display: none !important; }
+            aside, header, #ai-chat-panel, .no-print, .fab-help { display: none !important; }
             body, main { overflow: visible !important; height: auto !important; background: white !important; color: black !important; }
             .card, .bg-white { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+            .card::before { display: none !important; }
             #view-dashboard { display: block !important; padding: 0 !important; }
-            /* Ajuste para caber gráficos na folha */
-            canvas { max-height: 250px !important; } 
+            canvas { max-height: 250px !important; }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .card:hover { transform: none; }
+            .toast { min-width: 280px; max-width: calc(100vw - 40px); }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
@@ -704,6 +906,9 @@
             maxFileSizeMB: 50,
             forecastDays: 7
         };
+
+        // Variável global para rastrear o filtro de dias ativo
+        let currentDateFilter = 'all';
 
         // ==================== SISTEMA DE TEMPLATES ====================
         let currentTemplate = 'vendas';
@@ -1547,10 +1752,15 @@
                 const map = DatasetValidator.mapColumns(rawData[0] ? Object.keys(rawData[0]) : []);
                 const values = rawData.map(d => map.value ? parseFloat(d[map.value]) : parseFloat(d.valor || d.value || 0)).filter(v => !isNaN(v));
                 
-                // Estatísticas para Outliers
-                const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                const stdDev = Math.sqrt(values.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / values.length);
-                const zScoreLimit = 3; // 3 desvios padrão
+                // Estatísticas para Outliers (usando IQR - mais robusto que Z-Score)
+                const sortedValues = [...values].sort((a, b) => a - b);
+                const q1Index = Math.floor(sortedValues.length * 0.25);
+                const q3Index = Math.floor(sortedValues.length * 0.75);
+                const q1 = sortedValues[q1Index];
+                const q3 = sortedValues[q3Index];
+                const iqr = q3 - q1;
+                const lowerBound = q1 - (1.5 * iqr);
+                const upperBound = q3 + (1.5 * iqr);
 
                 const result = {
                     valid: [],
@@ -1626,9 +1836,9 @@
                         warnings.push(`Método de pagamento não padrão: "${normalized.payment}"`);
                     }
 
-                    // 5. Validação de Outlier (aviso)
-                    if (stdDev > 0 && Math.abs(normalized.value - mean) / stdDev > zScoreLimit) {
-                        warnings.push(`Valor atípico (Outlier) detectado: R$ ${normalized.value.toFixed(2)}`);
+                    // 5. Validação de Outlier (aviso) - Usando IQR
+                    if (iqr > 0 && (normalized.value < lowerBound || normalized.value > upperBound)) {
+                        warnings.push(`Valor atípico (Outlier) detectado: R$ ${normalized.value.toFixed(2)} (fora do intervalo R$ ${lowerBound.toFixed(2)} - R$ ${upperBound.toFixed(2)})`);
                         result.outliers.push({ rowIndex, original: d, value: normalized.value });
                     }
 
@@ -1674,7 +1884,7 @@
                     value: headers.find(h => /valor|value|total|price|preço|amount|venda|custo/i.test(h)) || null,
                     payment: headers.find(h => /pagamento|payment|pgto|forma|metodo/i.test(h)) || null,
                     status: headers.find(h => /status|estado|situacao|situação/i.test(h)) || null,
-                    id: headers.find(h => /^id$/i.test(h)) || null
+                    id: headers.find(h => /^id$|^id_|_id$|identificador|identifier/i.test(h)) || null
                 };
             }
         }
@@ -1982,6 +2192,26 @@
                 btn.classList.add('text-gray-600', 'dark:text-gray-300');
             });
 
+            // Atualiza o filtro global
+            currentDateFilter = 'custom';
+
+            // Calcula dias baseado no período filtrado para ajustar a previsão
+            if (currentData.length > 0) {
+                const dates = currentData.map(d => d.date).sort();
+                const firstDate = luxon.DateTime.fromISO(dates[0]);
+                const lastDate = luxon.DateTime.fromISO(dates[dates.length - 1]);
+                const daysDiff = lastDate.diff(firstDate, 'days').days;
+
+                // Define dias de previsão proporcionais ao período filtrado
+                if (daysDiff <= 7) {
+                    window.currentForecastDays = 7;
+                } else if (daysDiff <= 30) {
+                    window.currentForecastDays = 14;
+                } else {
+                    window.currentForecastDays = userConfig.forecastDays;
+                }
+            }
+
             // Atualiza o texto do filtro
             document.getElementById('sales-trend-filter').innerText = activeCount > 0 ? `(${activeCount} filtro${activeCount > 1 ? 's' : ''} ativo${activeCount > 1 ? 's' : ''})` : '(Todos os Dados)';
 
@@ -2251,30 +2481,40 @@
                 'Acessórios': ['Cabo HDMI', 'Hub USB', 'Mousepad', 'Suporte Notebook']
             };
             const methods = ['Crédito', 'PIX', 'Boleto'];
-            
-            // Usando Luxon para datas
-            let date = luxon.DateTime.now().minus({ days: 30 });
-            
-            for(let i=0; i<=30; i++) {
-                const dailySales = Math.floor(Math.random() * 8) + 1; 
-                for(let j=0; j<dailySales; j++) {
+
+            // Gera 60 dias de dados para que todos os filtros funcionem
+            const totalDays = 60;
+            let date = luxon.DateTime.now().minus({ days: totalDays - 1 });
+
+            for(let i = 0; i < totalDays; i++) {
+                // Variação no número de vendas diárias (mais vendas no final de semana)
+                const dayOfWeek = date.weekday;
+                const isWeekend = dayOfWeek === 6 || dayOfWeek === 7;
+                const baseSales = isWeekend ? 8 : 5;
+                const dailySales = Math.floor(Math.random() * baseSales) + 2;
+
+                for(let j = 0; j < dailySales; j++) {
                     const cat = categories[Math.floor(Math.random() * categories.length)];
                     const prodList = products[cat];
                     const prod = prodList[Math.floor(Math.random() * prodList.length)];
-                    const priceBase = Math.random() * 500 + 50;
-                    
+
+                    // Preço com tendência de crescimento e variação
+                    const basePrice = Math.random() * 400 + 100;
+                    const trendFactor = 1 + (i / totalDays) * 0.3; // 30% de crescimento ao longo do período
+                    const seasonalFactor = isWeekend ? 1.15 : 1; // 15% a mais no fim de semana
+
                     sample.push({
                         date: date.toISODate(),
                         category: cat,
                         product: prod,
-                        value: parseFloat((priceBase * (1 + i/50)).toFixed(2)),
+                        value: parseFloat((basePrice * trendFactor * seasonalFactor).toFixed(2)),
                         payment: methods[Math.floor(Math.random() * methods.length)],
-                        status: Math.random() > 0.1 ? 'Concluído' : (Math.random() > 0.3 ? 'Pendente' : 'Devolvido')
+                        status: Math.random() > 0.1 ? 'Concluído' : (Math.random() > 0.5 ? 'Pendente' : 'Devolvido')
                     });
                 }
                 date = date.plus({ days: 1 });
             }
-            
+
             // Simula a validação para dados de exemplo (todos válidos)
             const validation = {
                 valid: sample,
@@ -2286,7 +2526,7 @@
             };
 
             processData(validation.valid);
-            showToast("Dados de exemplo carregados!", "success");
+            showToast(`Dados de exemplo carregados! (${sample.length} registros em ${totalDays} dias)`, "success");
         }
 
         function handleFileUpload(input) {
@@ -2322,7 +2562,17 @@
                 return;
             }
 
-            showToast("Lendo arquivo...", "info");
+            // Feedback visual melhorado
+            const uploadBtn = document.querySelector('[onclick*="csv-file-input"]');
+            const originalBtnHTML = uploadBtn ? uploadBtn.innerHTML : '';
+
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Processando...';
+                uploadBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+
+            showToast(`Lendo arquivo "${file.name}" (${fileSizeMB.toFixed(2)}MB)...`, "info");
 
             Papa.parse(file, {
                 header: true,
@@ -2330,6 +2580,13 @@
                 skipEmptyLines: true,
                 preview: 10000, // Limitar preview para evitar sobrecarga
                 complete: function(results) {
+                    // Restaura botão
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = originalBtnHTML;
+                        uploadBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    }
+
                     if (!results.data || results.data.length === 0) {
                         showToast("Arquivo vazio ou inválido!", "error");
                         return;
@@ -2352,10 +2609,19 @@
                     pendingCSVData = results.data;
                     csvHeaders = headers;
 
+                    showToast(`✅ ${results.data.length} registros lidos com sucesso!`, "success");
+
                     // Abrir modal de seleção de template
                     openTemplateModal();
                 },
                 error: function(err) {
+                    // Restaura botão em caso de erro
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = originalBtnHTML;
+                        uploadBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    }
+
                     console.error('Erro ao processar CSV:', err);
                     showToast(`Erro ao processar CSV: ${err.message || 'Formato inválido'}`, "error");
                 }
@@ -2379,31 +2645,53 @@
         }
 
         function filterByDate(days) {
+            // Salva o filtro atual globalmente
+            currentDateFilter = days;
+
             let filterText = '';
-            let forecastTitle = 'Previsão de Vendas (Próximos 7 Dias)'; // Default
-            
+            let forecastDays = userConfig.forecastDays; // Usa configuração do usuário como padrão
+
             if (days === 7) {
                 filterText = '(Últimos 7 Dias)';
+                forecastDays = 7;
             } else if (days === 30) {
                 filterText = '(Últimos 30 Dias)';
-                forecastTitle = 'Previsão de Vendas (Próximos 30 Dias)';
+                forecastDays = 14; // Previsão de 14 dias para filtro de 30 dias
             } else {
                 filterText = '(Todos os Dados)';
-                forecastTitle = 'Previsão de Vendas (Próximos 7 Dias)'; // Mantém 7 dias para "Todos"
+                forecastDays = userConfig.forecastDays; // Usa configuração do usuário
             }
 
-            document.getElementById('sales-trend-filter').innerText = filterText;
-            document.getElementById('forecast-title').innerText = forecastTitle;
-            const today = luxon.DateTime.now().startOf('day');
-            let startDate = null;
+            // Atualiza os dias de previsão para uso na aba de forecast
+            window.currentForecastDays = forecastDays;
 
+            document.getElementById('sales-trend-filter').innerText = filterText;
+
+            // Atualiza título da previsão
+            const forecastTitle = document.getElementById('forecast-title');
+            if (forecastTitle) {
+                forecastTitle.innerText = `Previsão de Vendas (Próximos ${forecastDays} Dias)`;
+            }
+
+            // Filtra os dados baseado no período selecionado
             if (days === 'all') {
                 currentData = [...fullData];
             } else {
-                startDate = today.minus({ days: days - 1 });
-                currentData = fullData.filter(d => luxon.DateTime.fromISO(d.date) >= startDate);
+                // Encontra a data mais recente nos dados
+                if (fullData.length === 0) {
+                    currentData = [];
+                } else {
+                    const sortedDates = fullData.map(d => d.date).sort();
+                    const mostRecentDate = luxon.DateTime.fromISO(sortedDates[sortedDates.length - 1]);
+                    const startDate = mostRecentDate.minus({ days: days - 1 });
+
+                    currentData = fullData.filter(d => {
+                        const itemDate = luxon.DateTime.fromISO(d.date);
+                        return itemDate >= startDate && itemDate <= mostRecentDate;
+                    });
+                }
             }
-            
+
             // Atualiza o estado dos botões de filtro
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
@@ -2417,6 +2705,9 @@
 
             calculateStats();
             updateDashboardUI();
+
+            // Log para debug
+            console.log(`Filtro aplicado: ${days} dias | Dados filtrados: ${currentData.length} de ${fullData.length}`);
         }
 
         function calculateStats() {
@@ -2689,10 +2980,13 @@
         }
 
         function createForecastDataset(label, hist, future, color) {
-            const days = userConfig.forecastDays;
-            const padNull = Array(days).fill(null);
+            // Usa o tamanho real do array de previsão
+            const forecastLength = future.length;
+            const padNull = Array(forecastLength).fill(null);
             const padHist = Array(hist.length).fill(null);
+            // Conecta o último ponto histórico com a previsão
             padHist[hist.length-1] = hist[hist.length-1];
+
             return [{
                 label: label,
                 data: [...hist, ...padNull],
@@ -2717,9 +3011,16 @@
         }
 
         function updateForecastView(type) {
-            // Atualiza título
-            document.getElementById('forecast-title').innerText = `Previsão de Vendas (Próximos ${userConfig.forecastDays} Dias)`;
+            // Usa a variável global de dias de previsão, ou fallback para config do usuário
+            const days = window.currentForecastDays || userConfig.forecastDays;
 
+            // Atualiza título com o número correto de dias
+            const forecastTitle = document.getElementById('forecast-title');
+            if (forecastTitle) {
+                forecastTitle.innerText = `Previsão de Vendas (Próximos ${days} Dias)`;
+            }
+
+            // Atualiza estado dos botões de tipo de previsão
             document.querySelectorAll('.forecast-btn').forEach(btn => {
                 if(btn.dataset.type === type) {
                     btn.classList.remove('text-gray-500', 'dark:text-gray-400');
@@ -2731,9 +3032,12 @@
             });
 
             const dates = timeSeriesData.dates || [];
-            if(!dates.length) return;
+            if(!dates.length) {
+                console.warn('Sem dados para gerar previsão');
+                return;
+            }
+
             const datasets = [];
-            const days = userConfig.forecastDays;
 
             if (type === 'general') {
                 const values = dates.map(d => stats.dailySales[d] || 0);
@@ -2750,8 +3054,10 @@
             }
 
             const forecastDateFormat = getDateFormat();
+            const futureDates = getFutureDates(dates[dates.length-1], days);
+
             initChart('forecastChart', 'line', {
-                labels: [...dates, ...getFutureDates(dates[dates.length-1], days)],
+                labels: [...dates, ...futureDates],
                 datasets: datasets.flat()
             }, {
                 scales: {
@@ -2766,6 +3072,9 @@
                     }
                 }
             });
+
+            // Log para debug
+            console.log(`Previsão atualizada: ${type} | Dias históricos: ${dates.length} | Dias de previsão: ${days}`);
         }
 
         // --- AI (Chat, Analysis) ---
@@ -2997,6 +3306,9 @@
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
             loadTheme();
+
+            // Inicializa variável global de dias de previsão
+            window.currentForecastDays = userConfig.forecastDays;
 
             try {
                 // Inicializa o banco de dados
