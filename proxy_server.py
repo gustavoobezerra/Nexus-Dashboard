@@ -2,13 +2,28 @@ import os
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
+# Carrega variáveis de ambiente do arquivo .env (para desenvolvimento local)
+load_dotenv()
+
+# A chave de API deve ser carregada de uma variável de ambiente
+# Para desenvolvimento local: crie um arquivo .env com GEMINI_API_KEY=sua_chave
+# Para produção (Render): configure a variável de ambiente no painel
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-if not GEMINI_API_KEY:
-    print("ERRO: A variável de ambiente GEMINI_API_KEY não está definida.")
-    print("Defina-a com sua chave de API antes de rodar o servidor.")
-    exit()
+if not GEMINI_API_KEY or GEMINI_API_KEY == 'SUA_CHAVE_AQUI':
+    print("═" * 70)
+    print("❌ ERRO: API Key do Google Gemini não configurada!")
+    print("═" * 70)
+    print("\n📋 Para corrigir:")
+    print("   1. Abra o arquivo '.env' na raiz do projeto")
+    print("   2. Substitua 'SUA_CHAVE_AQUI' pela sua chave real")
+    print("   3. Obtenha sua chave em: https://makersuite.google.com/app/apikey")
+    print("\n💡 Exemplo do arquivo .env:")
+    print("   GEMINI_API_KEY=AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567\n")
+    print("═" * 70)
+    exit(1)
 
 app = Flask(__name__)
 # Permite que o frontend (que estará em http://localhost:8000) acesse este backend (http://localhost:5000)
@@ -50,5 +65,18 @@ def gemini_proxy():
         return jsonify({"error": "Erro interno do servidor proxy."}), 500
 
 if __name__ == '__main__':
+    print("\n" + "═" * 70)
+    print("✅ Nexus Dashboard - Proxy Server Iniciado!")
+    print("═" * 70)
+    print(f"\n🔑 API Key carregada: {GEMINI_API_KEY[:20]}...{GEMINI_API_KEY[-4:]}")
+    print("🌐 Servidor rodando em: http://localhost:5000")
+    print("📝 Endpoint: http://localhost:5000/api/gemini-proxy")
+    print("\n💡 Próximos passos:")
+    print("   1. Mantenha esta janela aberta")
+    print("   2. Abra o arquivo 'index.html' no navegador")
+    print("   3. Use o dashboard normalmente!")
+    print("\n⚠️  Pressione Ctrl+C para parar o servidor")
+    print("═" * 70 + "\n")
+
     # O servidor Flask rodará na porta 5000
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)
