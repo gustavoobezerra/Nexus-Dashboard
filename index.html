@@ -43,7 +43,17 @@
 
     <!-- Nexus Unified - All fixes, enhancements and patches in one optimized file -->
     <script src="nexus-unified.js" defer></script>
-    
+
+    <!-- Simple Statistics Library -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.8.3/dist/simple-statistics.min.js"></script>
+
+    <!-- Nexus v4.0 - Advanced Modules -->
+    <script src="nexus-improvements.js" defer></script>
+    <script src="advanced-charts.js" defer></script>
+    <script src="statistical-analysis.js" defer></script>
+    <script src="template-formatter.js" defer></script>
+    <script src="template-validator.js" defer></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -686,11 +696,6 @@
                         <i class="fa-solid fa-sliders"></i>
                     </button>
 
-                    <!-- Config API -->
-                    <button onclick="openApiModal()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 trans-all" title="Configurar API Key">
-                        <i class="fa-solid fa-key"></i>
-                    </button>
-
                     <!-- Theme -->
                     <button onclick="toggleTheme()" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 hover:ring-2 ring-indigo-500 trans-all" title="Alternar Tema">
                         <i id="theme-icon" class="fa-solid fa-moon"></i>
@@ -794,6 +799,50 @@
                         </div>
                     </div>
 
+                    <!-- GRÁFICO AVANÇADO - Scatter Plot (Dispersão) -->
+                    <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Análise de Dispersão</h4>
+                            <button onclick="analyzeSpecificChart('scatter_analysis')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO AVANÇADO - Box Plot (Distribuição) -->
+                    <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Distribuição por Quartis</h4>
+                            <button onclick="analyzeSpecificChart('boxplot_distribution')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="boxPlotChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO AVANÇADO - Radar Chart (Comparação Multivariada) -->
+                    <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Comparação Multivariada</h4>
+                            <button onclick="analyzeSpecificChart('radar_comparison')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO AVANÇADO - Heatmap (Mapa de Calor) -->
+                    <div class="card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold">Correlação Categoria x Pagamento</h4>
+                            <button onclick="analyzeSpecificChart('heatmap_correlation')" class="text-xs text-indigo-500 hover:text-indigo-700 font-medium">Insight <i class="fa-solid fa-robot ml-1"></i></button>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="heatmapChart"></canvas>
+                        </div>
+                    </div>
+
                     <!-- TABELA - Top Produtos -->
                     <div class="lg:col-span-2 card bg-white dark:bg-slate-900 p-5 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
                         <h4 class="text-lg font-semibold mb-4">Top 5 Produtos</h4>
@@ -888,7 +937,6 @@
 
     <script>
         // Variáveis de estado globais
-        let apiKey = localStorage.getItem('geminiApiKey') || 'SUA_CHAVE_AQUI';
         let fullData = [];
         let currentData = [];
         let stats = {};
@@ -1726,25 +1774,6 @@
             return forecast;
         }
 
-        // ==================== VALIDAÇÃO DE API KEY ====================
-        async function validateApiKey(key) {
-            if (!key || key === 'SUA_CHAVE_AQUI' || key.length < 30) return false;
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, {
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-                return response.ok;
-            } catch (error) {
-                console.error('Erro ao validar API key:', error);
-                return false;
-            }
-        }
 
         // --- DATASET VALIDATOR CLASS ---
         class DatasetValidator {
@@ -1941,83 +1970,6 @@
             }, 4000);
         }
 
-        function openApiModal() {
-            const input = document.getElementById('api-key-input');
-            if (input) {
-                input.value = apiKey === 'SUA_CHAVE_AQUI' ? '' : apiKey;
-            }
-            const modal = document.getElementById('api-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeApiModal() {
-            const modal = document.getElementById('api-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
-
-        async function saveApiKey() {
-            const input = document.getElementById('api-key-input');
-            const btn = document.getElementById('save-api-btn');
-            const status = document.getElementById('api-key-status');
-
-            if (!input || !btn || !status) {
-                showToast("Erro ao acessar elementos do modal", "error");
-                return;
-            }
-
-            const newKey = input.value.trim();
-
-            if (newKey) {
-                // Validação básica de formato
-                if (newKey.length < 30 || !/^[A-Za-z0-9_-]+$/.test(newKey)) {
-                    showToast("Formato de chave inválido", "error");
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Validando...';
-                status.classList.remove('hidden', 'text-green-600', 'text-red-600');
-                status.classList.add('text-gray-500');
-                status.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Verificando chave...';
-
-                try {
-                    const isValid = await validateApiKey(newKey);
-
-                    if (isValid) {
-                        apiKey = newKey;
-                        localStorage.setItem('geminiApiKey', newKey);
-                        status.classList.remove('text-gray-500');
-                        status.classList.add('text-green-600');
-                        status.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> Chave válida!';
-                        showToast("Chave API validada e salva!", "success");
-                        setTimeout(() => closeApiModal(), 1000);
-                    } else {
-                        status.classList.remove('text-gray-500');
-                        status.classList.add('text-red-600');
-                        status.innerHTML = '<i class="fa-solid fa-times-circle mr-1"></i> Chave inválida. Verifique e tente novamente.';
-                        showToast("Chave API inválida!", "error");
-                    }
-                } catch (error) {
-                    console.error('Erro ao validar chave:', error);
-                    status.classList.remove('text-gray-500');
-                    status.classList.add('text-red-600');
-                    status.innerHTML = '<i class="fa-solid fa-times-circle mr-1"></i> Erro de conexão.';
-                    showToast("Erro ao validar chave. Verifique sua conexão.", "error");
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = 'Salvar';
-                }
-            } else {
-                apiKey = 'SUA_CHAVE_AQUI';
-                localStorage.removeItem('geminiApiKey');
-                showToast("Chave API removida.", "info");
-                closeApiModal();
-            }
-        }
 
         // --- SETTINGS MODAL ---
         function openSettingsModal() {
@@ -2914,7 +2866,14 @@
                 datasets: [{ label: 'Vendas', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.4, pointRadius: 3 }]
             }, { 
                 scales: { 
-                    y: { beginAtZero: true }, 
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 }).format(value);
+                            }
+                        }
+                    },
                     x: { 
                         grid: { display: false },
                         ticks: {
@@ -2924,7 +2883,23 @@
                             }
                         }
                     } 
-                } 
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
             });
 
             initChart('paymentChart', 'bar', {
@@ -2943,26 +2918,119 @@
                 datasets: [{ label: 'R$', data: Object.values(stats.catBreakdown), backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6'], borderRadius: 4 }]
             }, { 
                 indexAxis: 'y', 
-                plugins: { legend: { display: false } }, 
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.x);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
                 scales: { 
-                    x: { grid: { borderDash: [5, 5], color: chartTheme.gridColor } }, 
+                    x: {
+                        grid: { borderDash: [5, 5], color: chartTheme.gridColor },
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 }).format(value);
+                            }
+                        }
+                    },
                     y: { grid: { display: false } } 
                 } 
             });
 
             initChart('doughnutChart', 'doughnut', {
                 labels: Object.keys(stats.statusBreakdown),
-                datasets: [{ 
-                    label: 'Pedidos', 
-                    data: Object.values(stats.statusBreakdown), 
+                datasets: [{
+                    label: 'Pedidos',
+                    data: Object.values(stats.statusBreakdown),
                     backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Verde, Amarelo, Vermelho
                     borderWidth: 0,
                     hoverOffset: 4
                 }]
-            }, { 
-                cutout: '70%', 
-                plugins: { legend: { position: 'right', labels: { usePointStyle: true } } } 
+            }, {
+                cutout: '70%',
+                plugins: { legend: { position: 'right', labels: { usePointStyle: true } } }
             });
+
+            // ===================================================================
+            // GRÁFICOS AVANÇADOS v4.0 - Integração
+            // ===================================================================
+
+            // Validar se há dados suficientes para gráficos avançados
+            if (!currentData || currentData.length < 3) {
+                console.warn('Dados insuficientes para gráficos avançados (mínimo: 3 registros)');
+                return;
+            }
+
+            if (typeof window.createScatterChart === 'function') {
+                try {
+                    window.createScatterChart('scatterChart', currentData, {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Análise de Dispersão - Valor vs Categoria'
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Erro ao criar scatter chart:', e);
+                }
+            }
+
+            if (typeof window.createBoxPlotChart === 'function') {
+                try {
+                    window.createBoxPlotChart('boxPlotChart', currentData, {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Distribuição de Valores por Categoria'
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Erro ao criar box plot:', e);
+                }
+            }
+
+            if (typeof window.createRadarChart === 'function') {
+                try {
+                    window.createRadarChart('radarChart', currentData, {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Comparação Multivariada de Categorias'
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Erro ao criar radar chart:', e);
+                }
+            }
+
+            if (typeof window.createHeatmapChart === 'function') {
+                try {
+                    window.createHeatmapChart('heatmapChart', currentData, {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Mapa de Calor - Categoria vs Pagamento'
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Erro ao criar heatmap:', e);
+                }
+            }
         }
 
         function getFutureDates(last, days) {
@@ -3130,92 +3198,6 @@
             await sendChatMessage(stats);
         }
 
-        async function sendChatMessage(ctx = null) {
-            const input = document.getElementById('chat-input');
-            const historyEl = document.getElementById('chat-history');
-
-            if (!input || !historyEl) {
-                showToast("Erro ao acessar elementos do chat", "error");
-                return;
-            }
-
-            const text = input.value.trim();
-
-            if(!text && !ctx) return;
-            if(apiKey === 'SUA_CHAVE_AQUI') return showToast("Configure sua API Key primeiro!", "error");
-
-            // Sanitize user input to prevent XSS
-            const sanitizedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-            // Adiciona mensagem do usuário ao histórico
-            chatHistory.push({ role: 'user', content: text, timestamp: Date.now() });
-            historyEl.innerHTML += `<div class="chat-bubble chat-user">${sanitizedText}</div>`;
-            input.value = '';
-            historyEl.scrollTop = historyEl.scrollHeight;
-
-            const loadingId = 'load'+Date.now();
-            historyEl.innerHTML += `<div id="${loadingId}" class="chat-bubble chat-ai italic"><i class="fa-solid fa-circle-notch fa-spin"></i> ...</div>`;
-            historyEl.scrollTop = historyEl.scrollHeight;
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,  {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `Você é um Analista de ERP. Seu objetivo é fornecer insights rápidos e práticos para um empresário. O contexto dos dados é: ${JSON.stringify(ctx || stats)}. A pergunta do usuário é: "${text}". Responda de forma concisa em português do Brasil, usando Markdown.`
-                            }]
-                        }]
-                    }),
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-
-                if(!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API Error: ${response.status} - ${errorText}`);
-                }
-
-                const data = await response.json();
-
-                const loadingElement = document.getElementById(loadingId);
-                if (loadingElement) {
-                    loadingElement.remove();
-                }
-
-                // Validação da resposta da API
-                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
-                    throw new Error("Resposta da API inválida");
-                }
-
-                // Usando marked para renderizar o Markdown da resposta da IA
-                const aiResponse = data.candidates[0].content.parts[0].text;
-
-                // Adiciona resposta da IA ao histórico
-                chatHistory.push({ role: 'assistant', content: aiResponse, timestamp: Date.now() });
-                await saveChatHistory();
-
-                historyEl.innerHTML += `<div class="chat-bubble chat-ai">${marked.parse(aiResponse)}</div>`;
-                historyEl.scrollTop = historyEl.scrollHeight;
-            } catch(e) {
-                console.error('Erro na API do Gemini:', e);
-                const loadingElement = document.getElementById(loadingId);
-                if (loadingElement) {
-                    loadingElement.innerText = "Erro: Verifique sua Chave API ou a conexão.";
-                }
-
-                if (e.name === 'AbortError') {
-                    showToast("Tempo limite excedido. Tente novamente.", "error");
-                } else {
-                    showToast("Erro na comunicação com a API do Gemini.", "error");
-                }
-            }
-        }
 
         // --- UI (View Switching, Dashboard Update) ---
         function switchView(view) {
@@ -3350,7 +3332,9 @@
 
             // Listener para o input do chat
             document.getElementById('chat-input').addEventListener('keypress', (e) => {
-                if(e.key==='Enter') sendChatMessage();
+                if(e.key==='Enter' && typeof window.sendChatMessage === 'function') {
+                    window.sendChatMessage();
+                }
             });
 
             // Atalhos de teclado

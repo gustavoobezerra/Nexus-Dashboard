@@ -1,0 +1,16 @@
+date,product,category,value,payment,status,quantity
+2024-12-01,Notebook Dell,Eletrônicos,3500.00,Crédito,Aprovado,1
+2024-12-02,Mouse Gamer,Eletrônicos,150.50,PIX,Aprovado,2
+2024-12-03,Teclado Mecânico,Eletrônicos,450.00,Débito,Aprovado,1
+2024-12-04,Monitor 27,Eletrônicos,1200.00,Crédito,Aprovado,1
+2024-12-05,Webcam HD,Eletrônicos,280.00,PIX,Aprovado,1
+2024-12-06,Headset RGB,Eletrônicos,320.00,Crédito,Aprovado,2
+2024-12-07,Mesa Escritório,Móveis,850.00,Boleto,Aprovado,1
+2024-12-08,Cadeira Gamer,Móveis,1100.00,Crédito,Aprovado,1
+2024-12-09,Luminária LED,Móveis,180.00,PIX,Aprovado,3
+2024-12-10,Suporte Monitor,Acessórios,95.00,Débito,Aprovado,2
+2024-12-11,Mousepad XXL,Acessórios,75.00,PIX,Aprovado,3
+2024-12-12,Cabo USB-C,Acessórios,35.00,Débito,Aprovado,5
+2024-12-13,Hub USB 3.0,Acessórios,120.00,Crédito,Aprovado,2
+2024-12-14,SSD 1TB,Eletrônicos,550.00,Crédito,Aprovado,1
+2024-12-15,RAM 16GB,Eletrônicos,380.00,PIX,Aprovado,2

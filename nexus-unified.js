@@ -632,6 +632,7 @@
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
+                                model: model,
                                 contents: [{
                                     parts: [{
                                         text: `Você é um Especialista em Business Intelligence.
