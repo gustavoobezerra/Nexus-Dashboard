@@ -1,89 +1,118 @@
-# Nexus ERP Analytics
 
-**Nexus ERP Analytics** é um dashboard de Business Intelligence (BI) interativo e moderno, projetado para visualização de dados de vendas, previsão de tendências (Forecasting) e consultoria estratégica através de Inteligência Artificial (Google Gemini).
 
-Desenvolvido como uma Single Page Application (SPA), o projeto utiliza tecnologias web nativas e bibliotecas leves para oferecer alta performance sem a necessidade de um backend complexo.
+# Nexus ERP Analytics v4.0
 
-## 🚀 Funcionalidades
+O **Nexus ERP Analytics** é um dashboard de Business Intelligence (BI) de última geração, desenvolvido como uma Single Page Application (SPA). Foi desenhado para transformar dados brutos (CSV) em insights acionáveis através de visualizações avançadas, análise estatística profunda e Inteligência Artificial (Google Gemini).
 
-### 📊 Dashboard Interativo
-- **KPIs em Tempo Real**: Visualize Receita Total, Volume de Vendas, Ticket Médio e Top Categorias.
-- **Gráficos Dinâmicos**: Acompanhe o fluxo de vendas diário, métodos de pagamento, desempenho por categoria e status dos pedidos.
-- **Listagens**: Tabelas de "Top Produtos" e "Transações Recentes".
-- **Filtros Temporais**: Filtre os dados por 7 dias, 30 dias ou período total.
+Esta versão **v4.0** introduz uma arquitetura modular, suporte a múltiplos tipos de dados (não apenas vendas) e ferramentas estatísticas robustas.
 
-### 🔮 Previsão de Vendas (Forecasting)
-- **Algoritmo de Regressão Linear**: Projeta tendências futuras para os próximos 7 dias.
-- **Múltiplas Visões**: Analise projeções gerais, por categoria, por método de pagamento ou por status do pedido.
+## 🚀 Novidades da Versão 4.0
 
-### 🤖 Consultor IA (Google Gemini)
-- **Assistente Integrado**: Chatbot lateral capaz de analisar os dados carregados no dashboard.
-- **Insights Contextuais**: Botões "Insight" e "Analisar" nos gráficos enviam automaticamente o contexto dos dados para a IA gerar explicações detalhadas.
+  * **Arquitetura Modular:** Código otimizado e dividido em módulos especializados (`nexus-unified.js`, `advanced-charts.js`, `statistical-analysis.js`).
+  * **Múltiplos Templates de Dados:** Suporte nativo para **Vendas, Estoque, Finanças, Jurídico e Educação**.
+  * **Análise Estatística Avançada:** Deteção automática de anomalias (Outliers), sazonalidade e tendências lineares.
+  * **Novos Gráficos:** Scatter Plots, Heatmaps, Radar Charts e Box Plots para distribuição de dados.
+  * **Persistência de Dados:** Utilização de **IndexedDB** para salvar grandes volumes de dados localmente no navegador.
+  * **Tabelas Virtuais:** Renderização otimizada para datasets com milhares de linhas.
 
-### ⚙️ Utilitários
-- **Importação de CSV**: Carregue seus próprios dados de vendas (compatível com CSVs contendo colunas como `date`, `value`, `category`, etc.).
-- **Exportação de Dados**: Baixe os dados filtrados em formato CSV.
-- **Temas**: Suporte completo a Modo Claro e Modo Escuro (Dark Mode).
-- **Gerador de Dados de Exemplo**: Popula o dashboard com dados fictícios para demonstração.
+## 📊 Funcionalidades Principais
+
+### 1\. Dashboard Inteligente e Dinâmico
+
+  * **KPIs Contextuais:** Os cartões de indicadores adaptam-se ao template escolhido (ex: "Receita" para Vendas vs. "Total de Processos" para Jurídico).
+  * **Visualização de Dados:**
+      * Evolução temporal (Linha).
+      * Comparação de categorias (Barras).
+      * Distribuição de status (Donut).
+      * Dispersão e Correlação (Scatter/Heatmap).
+  * **Temas:** Suporte total a **Modo Claro** e **Modo Escuro** com deteção automática de preferência do sistema.
+
+### 2\. Sistema de Templates
+
+O sistema reconhece e formata automaticamente os dados para diferentes verticais:
+
+| Template | Foco | Métricas Exemplo |
+| :--- | :--- | :--- |
+| **🛒 Vendas** | Comércio | Receita, Ticket Médio, Top Produtos |
+| **📦 Estoque** | Logística | Quantidade, Movimentações, Média Diária |
+| **💰 Finanças** | Contabilidade | Saldo, Receitas vs Despesas, Centros de Custo |
+| **⚖️ Jurídico** | Legal | Valor da Causa, Fases do Processo, Honorários |
+| **🎓 Educação** | Académico | Notas, Frequência, Total de Alunos |
+
+### 3\. Consultor IA (Google Gemini)
+
+  * **Chatbot Integrado:** Painel lateral para conversar com os seus dados.
+  * **Insights Contextuais:** Botões "Insight" em cada gráfico enviam os dados estatísticos específicos daquele gráfico para a IA gerar uma análise detalhada.
+  * **Proxy Seguro:** A comunicação com a API é feita através de um servidor proxy seguro, protegendo as chaves de API.
+
+### 4\. Ferramentas de Análise
+
+  * **Forecasting (Previsão):** Algoritmos de regressão linear e médias móveis para prever os próximos 7, 14 ou 30 dias.
+  * **Deteção de Anomalias:** Identificação estatística de valores atípicos (Z-Score e IQR).
+  * **Relatórios:** Geração de relatórios de validação de dados com identificação de erros e duplicados.
 
 ## 🛠️ Tecnologias Utilizadas
 
-*   **HTML5 & CSS3**: Estrutura e estilização.
-*   **JavaScript (ES6+)**: Lógica da aplicação (sem frameworks pesados).
-*   **Tailwind CSS**: Framework CSS utilitário para design responsivo e temas.
-*   **Chart.js**: Biblioteca para renderização de gráficos interativos.
-*   **PapaParse**: Parser de CSV rápido e robusto.
-*   **Google Gemini API**: Modelo de linguagem para o assistente de IA.
-*   **FontAwesome**: Ícones vetoriais.
+O projeto não requer instalação complexa (npm/node), utilizando bibliotecas modernas via CDN para máxima portabilidade:
 
-## 📦 Instalação e Configuração
+  * **Core:** HTML5, CSS3, JavaScript (ES6+).
+  * **UI/UX:** Tailwind CSS, FontAwesome.
+  * **Dados & Lógica:**
+      * `PapaParse`: Processamento de ficheiros CSV.
+      * `Luxon`: Manipulação avançada de datas e fusos horários.
+      * `Simple Statistics`: Cálculos estatísticos complexos.
+  * **Visualização:** Chart.js (com plugins de zoom e anotações).
+  * **IA:** Integração com Google Gemini Pro via API REST.
 
-Como o projeto é uma aplicação estática (client-side), não há necessidade de instalação de dependências via npm ou servidores complexos.
+## 📖 Guia de Utilização
 
-1.  **Clone o repositório**:
-    ```bash
-    git clone https://github.com/seu-usuario/nexus-erp-analytics.git
-    cd nexus-erp-analytics
-    ```
+### 1\. Carregar Dados
 
-2.  **Configuração da API Key (Opcional)**:
-    *   O projeto vem com uma chave de API de demonstração no código (`index.html`).
-    *   Para uso em produção ou pessoal, obtenha sua própria chave no [Google AI Studio](https://aistudio.google.com/).
-    *   Substitua a constante `apiKey` no início do bloco `<script>` no arquivo `index.html`.
+Pode utilizar o botão **"Demo"** para gerar dados fictícios ou **"CSV"** para carregar o seu ficheiro. O sistema aceita ficheiros `.csv` com cabeçalhos.
 
-3.  **Executar**:
-    *   Basta abrir o arquivo `index.html` em qualquer navegador moderno.
+O sistema de **Mapeamento Inteligente** tentará identificar as colunas automaticamente. Exemplos de colunas reconhecidas:
 
-## 📖 Como Usar
+  * **Data:** `data`, `date`, `dt_venda`, `criado_em`
+  * **Valor:** `valor`, `value`, `total`, `preço`, `nota`
+  * **Categoria:** `categoria`, `category`, `setor`, `curso`, `área`
+  * **Produto/Item:** `produto`, `product`, `item`, `aluno`, `processo`
 
-1.  **Carregar Dados**:
-    *   Ao abrir, clique em **"Exemplo"** no topo para gerar dados fictícios.
-    *   Ou clique em **"CSV"** para fazer upload do seu arquivo de vendas.
-2.  **Navegação**:
-    *   Use a barra lateral para alternar entre **"Visão Geral"** (Dashboard) e **"Previsões Futuras"** (Forecasting).
-3.  **IA**:
-    *   Clique em **"Consultor IA"** na barra lateral ou nos botões de "Insight" nos gráficos para abrir o chat e interagir com o assistente.
-4.  **Temas**:
-    *   Clique no ícone de Lua/Sol no topo para alternar entre os modos Claro e Escuro.
+### 2\. Atalhos de Teclado
 
-## 📄 Formato do CSV
+Aumente a produtividade com atalhos rápidos:
 
-Para importar seus próprios dados, o arquivo CSV deve conter cabeçalhos. O sistema tenta identificar automaticamente colunas com nomes comuns (em português ou inglês), como:
+  * `1`, `2`, `3`: Alternar entre Dashboard, Previsões e Chat IA.
+  * `Ctrl + I`: Importar ficheiro CSV.
+  * `Ctrl + E`: Exportar dados (CSV/Excel/PDF).
+  * `Ctrl + F`: Abrir filtros avançados.
+  * `D`: Alternar Modo Escuro/Claro.
+  * `?`: Ver lista completa de atalhos.
 
-*   **Data**: `date`, `data`, `Data`
-*   **Categoria**: `category`, `categoria`
-*   **Produto**: `product`, `produto`
-*   **Valor**: `value`, `valor`
-*   **Pagamento**: `payment`, `pagamento`
-*   **Status**: `status`
+### 3\. Filtros Avançados
 
-Exemplo:
-```csv
-data,produto,categoria,valor,pagamento,status
-2023-10-01,Notebook,Eletrônicos,3500.00,Crédito,Concluído
-2023-10-01,Mesa,Móveis,450.00,PIX,Pendente
-```
+Clique no botão "Filtros" para aceder a segmentação granular:
 
-## 📝 Licença
+  * Intervalo de datas personalizado.
+  * Filtragem por valor mínimo/máximo.
+  * Seleção múltipla de categorias ou status.
 
-Este projeto está sob a licença MIT. Sinta-se à vontade para usar e modificar.
+## 📂 Estrutura do Projeto
+
+  * `index.html`: Ponto de entrada da aplicação e estrutura DOM.
+  * `nexus-unified.js`: Núcleo do sistema (Rate limits, Storage, Chatbot, Utils).
+  * `nexus-improvements.js`: Melhorias de performance, limpeza de memória e filtros (v4.0).
+  * `advanced-charts.js`: Implementação de gráficos complexos (Scatter, Radar, BoxPlot).
+  * `statistical-analysis.js`: Motor de cálculo estatístico (Tendências, Sazonalidade).
+  * `template-formatter.js`: Lógica de formatação inteligente baseada no template ativo.
+  * `template-validator.js`: Validação de integridade dos dados importados.
+
+## ⚠️ Notas de Segurança e Performance
+
+1.  **Dados Locais:** Todos os dados carregados são processados no navegador e guardados no **IndexedDB** do utilizador. Nada é enviado para servidores externos, exceto os resumos estatísticos anonimizados enviados para a IA (Google Gemini) quando solicita um insight.
+2.  **API Key:** A chave da API do Gemini não está exposta no código cliente; o sistema espera um servidor proxy configurado no endpoint definido em `CONFIG.API_BASE_URL`.
+
+## 📄 Licença
+
+Distribuído sob a licença **MIT**. Sinta-se à vontade para utilizar, modificar e distribuir.
+
+-----
