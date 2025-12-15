@@ -38,3 +38,4 @@ npm-debug.log*
 # Temporários
 *.tmp
 *.temp
+nul

@@ -5,9 +5,7 @@ services:
   # Backend - API Python/Flask
   - type: web
     name: nexus-dashboard-api
-    env: python
-    region: oregon
-    plan: free
+    runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
@@ -23,8 +21,7 @@ services:
   # Frontend - React/Vite (Static Site)
   - type: web
     name: nexus-dashboard
-    env: static
-    plan: free
+    runtime: static
     rootDir: frontend
     buildCommand: npm install -g pnpm && pnpm install && pnpm build
     staticPublishPath: dist
