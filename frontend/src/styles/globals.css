@@ -1,4 +1,4 @@
-/* Feito por Gustavo Bezerra */
+/* Feito por Gustavo Bezerra - Estilos Premium */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,46 +6,67 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
   }
   
   body {
     @apply bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-white antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
+  /* Scrollbar Personalizada */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-slate-800;
+    @apply bg-gray-100 dark:bg-slate-800 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-slate-600 rounded-full;
+    @apply bg-gradient-to-b from-indigo-400 to-purple-500 rounded-full;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-slate-500;
+    @apply from-indigo-500 to-purple-600;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-indigo-500/30 text-indigo-900 dark:text-indigo-100;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors;
+    @apply px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors;
+    @apply px-5 py-2.5 border border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-all duration-300;
   }
 
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800;
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-200/50 dark:border-slate-700/50 hover:shadow-lg transition-all duration-300;
+  }
+
+  .card-gradient {
+    @apply relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-slate-700/50;
   }
 
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+    @apply w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-300;
+  }
+
+  .glass {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-slate-700/50;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent;
   }
 }
 
@@ -58,26 +79,134 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Animações customizadas */
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.5s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
 }
 
+/* Keyframes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Prose styles */
 .prose {
   @apply text-gray-900 dark:text-white;
 }
 
 .prose h1, .prose h2, .prose h3 {
-  @apply text-gray-900 dark:text-white;
+  @apply text-gray-900 dark:text-white font-bold;
 }
 
 .prose p {
-  @apply text-gray-700 dark:text-gray-300;
+  @apply text-gray-700 dark:text-gray-300 leading-relaxed;
 }
 
 .prose code {
-  @apply bg-gray-100 dark:bg-slate-800 px-1 py-0.5 rounded text-sm;
+  @apply bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-lg text-sm font-mono;
 }
 
 .prose pre {
-  @apply bg-gray-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto;
+  @apply bg-gray-900 dark:bg-slate-800 p-4 rounded-xl overflow-x-auto border border-gray-200 dark:border-slate-700;
 }
 
 .prose ul, .prose ol {
@@ -85,5 +214,29 @@
 }
 
 .prose strong {
-  @apply text-gray-900 dark:text-white;
+  @apply text-gray-900 dark:text-white font-semibold;
+}
+
+.prose a {
+  @apply text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline decoration-indigo-500/30 hover:decoration-indigo-500 transition-colors;
+}
+
+/* Chart.js custom styles */
+.chartjs-tooltip {
+  @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 !important;
+}
+
+/* Focus styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+}
+
+/* Smooth transitions for theme switch */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Disable transitions on theme switch for specific elements */
+.no-transition {
+  transition: none !important;
 }
