@@ -14,7 +14,7 @@
   <strong>Uma plataforma completa para análise de dados de vendas com visualizações interativas e assistente de IA integrado.</strong>
 </p>
 
-[🌐 Demo ao Vivo](https://nexus-dashboard-qpdm.onrender.com) · [📖 Documentação](#-como-funciona) · [🛠️ Instalação](#-instalação-local)
+[🌐 Demo ao Vivo](https://nexus-dashboard-q0zl.onrender.com) · [📖 Documentação](#-como-funciona) · [🛠️ Instalação](#-instalação-local)
 
 </div>
 
@@ -228,7 +228,7 @@ Acesse `http://localhost:5173` no navegador.
 O projeto está configurado para deploy automático no Render através do arquivo `render.yaml`. Basta conectar o repositório e configurar as variáveis de ambiente.
 
 **URLs de Produção:**
-- Frontend: https://nexus-dashboard-qpdm.onrender.com
+- Frontend: https://nexus-dashboard-q0zl.onrender.com
 - Backend: https://nexus-dashboard-api-795g.onrender.com
 
 ---
