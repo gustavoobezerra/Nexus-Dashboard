@@ -3,9 +3,7 @@ import { useState, useCallback } from 'react';
 import { useStore } from './useStore';
 import type { Stats } from '@/types';
 
-const API_URL = import.meta.env.PROD
-  ? 'https://nexus-dashboard-api.onrender.com'
-  : '';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export function useGemini() {
   const [isLoading, setIsLoading] = useState(false);
