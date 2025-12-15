@@ -24,7 +24,6 @@ services:
   - type: web
     name: nexus-dashboard
     env: static
-    region: oregon
     plan: free
     rootDir: frontend
     buildCommand: npm install -g pnpm && pnpm install && pnpm build
