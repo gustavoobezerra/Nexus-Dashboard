@@ -23,7 +23,7 @@ services:
     name: nexus-dashboard
     runtime: static
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
     staticPublishPath: dist
     routes:
       - type: rewrite
