@@ -1,0 +1,122 @@
+=====================================================
+GUIA DO GUSTAVO - PROJETO NEXUS DASHBOARD V4.0
+=====================================================
+
+Gustavo, aqui está o guia completo e direto ao ponto da nova arquitetura do Nexus Dashboard. O objetivo foi transformar o projeto em algo profissional, escalável e fácil de manter, seguindo todas as suas especificações.
+
+
+--------------------------------------
+1. A NOVA ESTRUTURA: BACKEND E FRONTEND
+--------------------------------------
+
+O projeto agora está dividido em duas partes claras e independentes:
+
+- `/backend`: Uma API segura feita em Python com Flask. A única responsabilidade dela é ser uma ponte segura para a API do Gemini.
+- `/frontend`: Uma aplicação moderna feita com React e TypeScript. É aqui que toda a interface do usuário, interatividade e visualização de dados acontecem.
+
+Essa separação é o padrão da indústria. Ela permite que você desenvolva e faça o deploy de cada parte de forma independente. O frontend não sabe nada sobre chaves de API; ele apenas conversa com o nosso backend.
+
+
+--------------------------------------
+2. O BACKEND: SUA API SEGURA
+--------------------------------------
+
+O coração do backend é o arquivo `backend/app.py`.
+
+**Como Funciona:**
+- É um servidor Flask simples.
+- A função principal dele é receber requisições do frontend, adicionar a sua chave da API do Gemini (que fica segura no servidor) e repassar para a API do Google.
+- Ele foi construído pensando em segurança desde o início.
+
+**Recursos de Segurança Implementados:**
+1.  **Proteção da Chave API**: A `GEMINI_API_KEY` é lida de variáveis de ambiente (`.env`). Ela NUNCA fica no código. No deploy do Render, você a configura como um "Secret".
+2.  **CORS (Cross-Origin Resource Sharing)**: Em `app.py`, a variável `ALLOWED_ORIGINS` garante que SÓ o seu frontend (seja em `localhost` ou no domínio do Render) possa fazer requisições para esta API. Qualquer outro site tentando usar sua API será bloqueado pelo navegador.
+3.  **Rate Limiting**: Para evitar abusos, a API limita cada usuário (por IP) a 10 requisições por minuto. Isso está na função `check_rate_limit`.
+4.  **Validação de Payload**: Antes de enviar qualquer coisa para o Gemini, a função `validate_gemini_payload` verifica se a requisição do frontend tem a estrutura esperada. Isso evita erros e injeção de dados maliciosos.
+5.  **Sanitização de Input**: A função `sanitize_input` remove códigos perigosos (como tags `<script>`) que um usuário poderia tentar enviar pelo chat.
+6.  **Cabeçalhos de Segurança**: Todas as respostas da API incluem cabeçalhos como `X-XSS-Protection` e `X-Frame-Options` para proteger contra ataques comuns.
+
+**Endpoints Criados:**
+- `GET /health`: Um endpoint simples para o Render verificar se a API está no ar.
+- `POST /api/gemini-proxy`: O endpoint principal que o frontend usa para conversar com o Gemini.
+- `GET /api/models`: Envia para o frontend a lista de modelos de IA permitidos.
+
+
+--------------------------------------
+3. O FRONTEND: REACT + TYPESCRIPT
+--------------------------------------
+
+Esta foi a maior mudança. O antigo `index.html` de 3500 linhas foi substituído por uma estrutura de componentes reutilizáveis.
+
+**Tecnologias Usadas:**
+- **Vite**: Ferramenta de build super rápida para desenvolvimento.
+- **React**: Biblioteca para construir a interface com componentes.
+- **TypeScript**: Adiciona tipagem ao JavaScript, pegando 90% dos bugs antes mesmo de você testar no navegador.
+- **TailwindCSS**: Para estilização rápida e consistente.
+- **Zustand**: Para gerenciar o estado da aplicação de forma simples.
+
+**Estrutura de Pastas (`frontend/src`):**
+- `/components`: Peças reutilizáveis da UI (KPICard, Chart, Sidebar, etc.). Quer mudar a aparência de todos os cards? Mude apenas em `KPICard.tsx`.
+- `/pages`: As "telas" principais da aplicação (`Dashboard.tsx`, `Forecast.tsx`).
+- `/hooks`: Lógica reutilizável. `useStats.ts` tem toda a matemática, `useGemini.ts` tem a lógica de chat.
+- `/types`: Nossas "plantas" de dados. `index.ts` define como é um `SalesData`, um `Stats`, etc. O TypeScript garante que esses formatos sejam sempre respeitados.
+- `/utils`: Funções auxiliares, como formatadores de moeda (`formatters.ts`) e parsers de data/número (`parsers.ts`).
+- `App.tsx`: O componente principal que junta tudo: a sidebar, o header e a página atual.
+- `main.tsx`: O ponto de entrada da aplicação.
+
+**Gerenciamento de Estado com Zustand (`hooks/useStore.ts`):**
+- Pense no "store" como a memória central do seu app. Ele guarda o `fullData`, `currentData`, `stats`, o tema (dark/light), etc.
+- **Por que Zustand?** É extremamente simples e poderoso. Não tem a complexidade do Redux.
+- **Como funciona?** Quando você chama uma função como `setFullData(dados)`, o Zustand atualiza o estado. Qualquer componente que usa `useStore()` é automaticamente reconstruído pelo React com os novos dados. Acabou o `document.getElementById` para atualizar a tela.
+- **Persistência**: O `persist` middleware salva automaticamente o tema e os dados do usuário no `localStorage` do navegador. Quando ele voltar, os dados estarão lá.
+
+**Fluxo de Dados (Ex: Upload de CSV):**
+1.  O usuário clica em "Importar CSV" no `Header.tsx`.
+2.  O `App.tsx` recebe o arquivo e usa a biblioteca `PapaParse` para lê-lo.
+3.  A função `processCSVData` (dentro de `App.tsx`) tenta adivinhar as colunas (data, valor, etc.), limpa os dados e os padroniza.
+4.  `setFullData(dadosProcessados)` é chamado, atualizando o estado no Zustand.
+5.  Um `useEffect` no `App.tsx` detecta que `fullData` mudou e chama a função `applyFilters` do hook `useStats`.
+6.  `applyFilters` calcula todas as estatísticas (`revenue`, `topCategory`, etc.) e atualiza o `stats` no store.
+7.  O componente `Dashboard.tsx`, que está "escutando" as mudanças no `stats`, é renderizado novamente pelo React, mostrando os novos números e gráficos na tela. Tudo de forma automática e reativa.
+
+
+--------------------------------------
+4. DEPLOY NO RENDER
+--------------------------------------
+
+O arquivo `render.yaml` na raiz do projeto automatiza tudo.
+
+**Como Ele Funciona:**
+- Ele define dois "serviços":
+    1.  `nexus-dashboard-api`: Aponta para a pasta `/backend`, instala as dependências do `requirements.txt` e inicia o servidor Flask com `gunicorn` (que é um servidor de produção, mais robusto que o de desenvolvimento).
+    2.  `nexus-dashboard`: Aponta para a pasta `/frontend`, instala as dependências do `package.json` com `pnpm`, executa o build (`pnpm build`) e publica a pasta `dist` como um site estático.
+
+- **O que você precisa fazer no Render:**
+    1.  Criar um "Blueprint" e apontar para o seu repositório do GitHub.
+    2.  O Render vai ler o `render.yaml` e configurar os dois serviços.
+    3.  Ir nas "Environment Variables" do serviço `nexus-dashboard-api` e adicionar sua `GEMINI_API_KEY`.
+    4.  É isso. O Render cuida do resto.
+
+
+--------------------------------------
+5. COMO MANTER E EVOLUIR
+--------------------------------------
+
+- **Adicionar um novo Card de KPI?**
+  - Vá em `Dashboard.tsx`, copie uma linha do `<KPICard ... />` e passe os novos dados.
+
+- **Mudar o cálculo do Ticket Médio?**
+  - Vá em `hooks/useStats.ts`, na função `calculateStats`, e ajuste a linha `avgTicket: ...`.
+
+- **Adicionar uma nova página?**
+  - Crie o arquivo `pages/NovaPagina.tsx`.
+  - Adicione a rota em `App.tsx` e um botão na `Sidebar.tsx`.
+
+O código foi feito para ser intuitivo. Os nomes dos arquivos e pastas dizem exatamente o que eles fazem. Sem segredos, sem mágica.
+
+---
+
+Espero que este guia ajude, Gustavo. Foi um prazer refatorar o projeto para este novo padrão. Está robusto, rápido e pronto para crescer.
+
+Abraço,
+Manus AI
