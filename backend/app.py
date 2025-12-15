@@ -20,10 +20,14 @@ ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
-    os.environ.get('FRONTEND_URL', 'https://nexus-dashboard.onrender.com')
+    'https://nexus-dashboard-q0zl.onrender.com',
+    'https://nexus-dashboard.onrender.com',
+    os.environ.get('FRONTEND_URL', '')
 ]
 
-CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True)
+ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if origin]
+
+CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}}, supports_credentials=True)
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 ALLOWED_MODELS = [
@@ -139,9 +143,12 @@ def health_check():
     })
 
 
-@app.route('/api/gemini-proxy', methods=['POST'])
+@app.route('/api/gemini-proxy', methods=['POST', 'OPTIONS'])
 @rate_limit_required
 def gemini_proxy():
+    if request.method == 'OPTIONS':
+        return '', 204
+    
     if not GEMINI_API_KEY:
         return jsonify({'error': 'API key not configured'}), 500
     
